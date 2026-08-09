@@ -89,6 +89,11 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Lightweight liveness check for Render's deploy health check — no dependencies, no async work
+  app.get('/healthz', (req, res) => {
+    res.status(200).json({ ok: true });
+  });
+
   // Initialize Gemini lazily
   let geminiClient: GoogleGenAI | null = null;
   function getGeminiClient(): GoogleGenAI | null {
@@ -252,8 +257,11 @@ async function startServer() {
     return res.json({ success: true, message: 'Logged out successfully' });
   });
 
-  // Public Health check endpoints
+  // Public Health check endpoints (supports ?fast=true for instant ping)
   const handleHealthCheck = async (req: any, res: any) => {
+    if (req.query?.fast === 'true' || req.query?.fast === '1') {
+      return res.status(200).json({ status: 'HEALTHY', fast: true, timestamp: new Date().toISOString() });
+    }
     try {
       const port = process.env.PORT || 3000;
       const baseUrl = `${req.protocol}://${req.get('host') || `localhost:${port}`}`;
