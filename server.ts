@@ -1,14 +1,91 @@
 import express from 'express';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
 import { createServer as createViteServer } from 'vite';
+import { DiagnosticEngine } from './src/services/diagnostics/diagnosticEngine';
+import { ErrorCollector } from './src/services/diagnostics/errorCollector';
 
+interface SessionData {
+  username: string;
+  createdAt: number;
+  expiresAt: number;
+}
 
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+// Cryptographically generated runtime fallback key if SESSION_SECRET env var is omitted
+const RUNTIME_SESSION_SECRET = crypto.randomBytes(32).toString('hex');
+
+// Derive HMAC secret key for stateless session signatures across server instances
+function getSessionSecret(): string {
+  const secret = process.env.SESSION_SECRET?.trim();
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('FATAL CONFIG ERROR: SESSION_SECRET environment variable is missing in production. Production backend requires a static SESSION_SECRET for stateless HMAC session validation across instances.');
+    }
+    return RUNTIME_SESSION_SECRET;
+  }
+  return secret;
+}
+
+// Generate cryptographically signed, stateless session token
+function createSignedSessionToken(username: string): string {
+  const secret = getSessionSecret();
+  const now = Date.now();
+  const payload = {
+    u: username,
+    c: now,
+    e: now + SEVEN_DAYS_MS,
+    n: crypto.randomBytes(16).toString('hex')
+  };
+  const jsonStr = JSON.stringify(payload);
+  const base64Data = Buffer.from(jsonStr).toString('base64url');
+  const signature = crypto.createHmac('sha256', secret).update(base64Data).digest('base64url');
+  return `${base64Data}.${signature}`;
+}
+
+// Verify HMAC signature and expiration timestamp statelessly
+function verifySignedSessionToken(token: string): SessionData | null {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+
+  const [base64Data, signature] = parts;
+  const secret = getSessionSecret();
+  const expectedSignature = crypto.createHmac('sha256', secret).update(base64Data).digest('base64url');
+
+  try {
+    const bufA = Buffer.from(signature);
+    const bufB = Buffer.from(expectedSignature);
+    if (bufA.length !== bufB.length || !crypto.timingSafeEqual(bufA, bufB)) {
+      return null;
+    }
+  } catch {
+    return null;
+  }
+
+  try {
+    const jsonStr = Buffer.from(base64Data, 'base64url').toString('utf8');
+    const payload = JSON.parse(jsonStr);
+    if (!payload || typeof payload !== 'object') return null;
+    if (typeof payload.e !== 'number' || Date.now() > payload.e) {
+      return null; // Expired session
+    }
+    return {
+      username: payload.u || 'syle',
+      createdAt: payload.c || Date.now(),
+      expiresAt: payload.e
+    };
+  } catch {
+    return null;
+  }
+}
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   app.use(express.json());
 
@@ -30,16 +107,210 @@ async function startServer() {
     return geminiClient;
   }
 
-  // Health check endpoint
-  app.get('/api/health', (req, res) => {
-    res.json({
-      status: 'ok',
-      service: 'XTwo Shows API',
-      aiAvailable: !!process.env.GEMINI_API_KEY,
-      tmdbConfigured: !!(process.env.TMDB_API_KEY || process.env.TMDB_ACCESS_TOKEN || process.env.TMDB_TOKEN),
-      firebaseConfigured: !!(process.env.FIREBASE_API_KEY || process.env.FIREBASE_CONFIG),
-      timestamp: new Date().toISOString(),
+  // Helper to parse HTTP Cookie headers safely
+  function parseCookies(req: any): Record<string, string> {
+    const list: Record<string, string> = {};
+    const rc = req.headers.cookie;
+    if (rc) {
+      rc.split(';').forEach((cookie: string) => {
+        const parts = cookie.split('=');
+        if (parts.length >= 2) {
+          list[parts.shift()!.trim()] = decodeURIComponent(parts.join('='));
+        }
+      });
+    }
+    return list;
+  }
+
+  // Validate active session statelessly using HMAC verification
+  function getValidSession(req: any): SessionData | null {
+    const cookies = parseCookies(req);
+    const sessionCookie = cookies['x2shows_session'];
+
+    if (sessionCookie) {
+      const session = verifySignedSessionToken(sessionCookie);
+      if (session) return session;
+    }
+
+    // Support Bearer authorization header with valid signed session token
+    const authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7).trim();
+      const session = verifySignedSessionToken(token);
+      if (session) return session;
+    }
+
+    return null;
+  }
+
+  // Simple in-memory rate limiter for login attempts
+  const loginAttempts: Record<string, { count: number; resetTime: number }> = {};
+  function checkRateLimit(ip: string): boolean {
+    const now = Date.now();
+    const record = loginAttempts[ip];
+    if (!record || now > record.resetTime) {
+      loginAttempts[ip] = { count: 1, resetTime: now + 15 * 60 * 1000 };
+      return true;
+    }
+    if (record.count >= 10) {
+      return false;
+    }
+    record.count++;
+    return true;
+  }
+
+  // Server-side Password & Login API Handler
+  const handleServerAuth = (req: any, res: any) => {
+    const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+    if (!checkRateLimit(String(ip))) {
+      return res.status(429).json({
+        success: false,
+        message: 'Too many login attempts. Please try again in 15 minutes.'
+      });
+    }
+
+    const { passwordGuess, password, username, user } = req.body || {};
+    const inputPassword = (passwordGuess || password || '').trim();
+    const inputUser = (username || user || '').trim();
+
+    const envPass = (process.env.SITE_PASSWORD || process.env.BASIC_AUTH_PASSWORD || '').trim();
+    const envUser = (process.env.BASIC_AUTH_USER || 'syle').trim();
+
+    // Production fail-closed check
+    if (process.env.NODE_ENV === 'production' && !envPass) {
+      console.error('CRITICAL: SITE_PASSWORD environment variable is required in production.');
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error. SITE_PASSWORD is required in production.'
+      });
+    }
+
+    const targetPass = envPass || (process.env.NODE_ENV !== 'production' ? 'sylenumber1' : '');
+
+    if (!targetPass) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials. Password verification failed.'
+      });
+    }
+
+    // Require non-empty username AND matching password
+    if (!inputUser || !inputPassword) {
+      return res.status(401).json({
+        success: false,
+        message: 'Username and password are required.'
+      });
+    }
+
+    const userMatch = inputUser.toLowerCase() === envUser.toLowerCase();
+    const passMatch = inputPassword === targetPass;
+
+    if (userMatch && passMatch) {
+      // Generate stateless HMAC-signed session token (works across multiple Cloud Run instances)
+      const token = createSignedSessionToken(envUser);
+
+      const isSecure = process.env.NODE_ENV === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https';
+      const cookieHeader = `x2shows_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}${isSecure ? '; Secure' : ''}`;
+      res.setHeader('Set-Cookie', cookieHeader);
+
+      return res.json({
+        success: true,
+        user: { email: `${envUser}@x2shows.local`, role: 'authenticated' }
+      });
+    } else {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials. Password verification failed.'
+      });
+    }
+  };
+
+  app.post('/api/login', handleServerAuth);
+  app.all('/api/check-password', (req, res) => {
+    res.status(410).json({ success: false, error: 'Endpoint deprecated. Use POST /api/login.' });
+  });
+
+  // Session verification status endpoints
+  const handleSessionCheck = (req: any, res: any) => {
+    const session = getValidSession(req);
+    if (session) {
+      return res.json({
+        authenticated: true,
+        user: { email: `${session.username}@x2shows.local`, role: 'authenticated' }
+      });
+    }
+    return res.json({ authenticated: false });
+  };
+
+  app.get('/api/session', handleSessionCheck);
+  app.get('/api/auth/session', handleSessionCheck);
+
+  // Session destruction logout endpoint
+  app.post('/api/logout', (req, res) => {
+    const isSecure = process.env.NODE_ENV === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https';
+    res.setHeader('Set-Cookie', `x2shows_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax${isSecure ? '; Secure' : ''}`);
+    return res.json({ success: true, message: 'Logged out successfully' });
+  });
+
+  // Public Health check endpoints
+  const handleHealthCheck = async (req: any, res: any) => {
+    try {
+      const port = process.env.PORT || 3000;
+      const baseUrl = `${req.protocol}://${req.get('host') || `localhost:${port}`}`;
+      const health = await DiagnosticEngine.getSystemHealth(baseUrl);
+      res.json(health);
+    } catch (err: any) {
+      res.status(500).json({
+        overallStatus: 'FAILED',
+        error: err.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  };
+
+  app.get('/health', handleHealthCheck);
+  app.get('/api/health', handleHealthCheck);
+
+  // Strict API Authentication Middleware verifying active signed sessions
+  const requireAuth = (req: any, res: any, next: any) => {
+    const session = getValidSession(req);
+    if (session) {
+      req.session = session;
+      return next();
+    }
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required. Valid session needed.'
     });
+  };
+
+  // Protect ALL sensitive API routes under /api/*
+  app.use('/api', requireAuth);
+
+  // Secure Developer/Admin Diagnostics Endpoints (Requires Session Auth)
+  app.get('/api/diagnostics', async (req: any, res: any) => {
+    try {
+      const port = process.env.PORT || 3000;
+      const baseUrl = `${req.protocol}://${req.get('host') || `localhost:${port}`}`;
+      const report = await DiagnosticEngine.runFullDiagnostics(baseUrl);
+      res.json(report);
+    } catch (err: any) {
+      ErrorCollector.captureError(err, { subsystem: 'EXPRESS_DIAGNOSTICS' });
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.post('/api/diagnostics/run', async (req: any, res: any) => {
+    try {
+      const port = process.env.PORT || 3000;
+      const baseUrl = `${req.protocol}://${req.get('host') || `localhost:${port}`}`;
+      const actionReq = req.body || { action: 'RUN_FULL_DIAGNOSTIC' };
+      const result = await DiagnosticEngine.executeAction(actionReq, baseUrl);
+      res.json(result);
+    } catch (err: any) {
+      ErrorCollector.captureError(err, { subsystem: 'EXPRESS_DIAGNOSTICS_RUN' });
+      res.status(500).json({ success: false, error: err.message });
+    }
   });
 
   // TMDB Status & Config Endpoint
@@ -516,74 +787,9 @@ Return JSON:
     }
   });
 
-  // Codebase Fast Router Agent API
-  app.post('/api/gemini/router', async (req, res) => {
-    try {
-      const { prompt } = req.body;
-      const client = getGeminiClient();
-
-      if (!client) {
-        return res.json({
-          text: JSON.stringify({
-            targetFile: "src/App.tsx",
-            targetSymbol: "App",
-            reason: "Gemini offline. Defaulting to App.tsx main orchestrator."
-          })
-        });
-      }
-
-      const response = await client.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: prompt,
-        config: {
-          temperature: 0.1,
-        }
-      });
-
-      res.json({
-        text: response.text || "{}"
-      });
-    } catch (err: any) {
-      console.error('Fast Router Agent API Error:', err);
-      res.json({
-        text: JSON.stringify({
-          targetFile: "src/App.tsx",
-          targetSymbol: "App",
-          reason: `Router API Error: ${err.message || err}`
-        })
-      });
-    }
-  });
-
-  // High-Speed Isolated Execution Builder API
-  app.post('/api/gemini/builder', async (req, res) => {
-    try {
-      const { prompt } = req.body;
-      const client = getGeminiClient();
-
-      if (!client) {
-        return res.json({
-          text: "// Gemini offline. Builder mock placeholder applied successfully.\nconsole.log('Isolated Execution Completed Offline');"
-        });
-      }
-
-      const response = await client.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: prompt,
-        config: {
-          temperature: 0.2,
-        }
-      });
-
-      res.json({
-        text: response.text || ""
-      });
-    } catch (err: any) {
-      console.error('Execution Builder API Error:', err);
-      res.json({
-        text: `// Builder API Error: ${err.message || err}`
-      });
-    }
+  // Internal dev endpoints disabled in production
+  app.all(['/api/gemini/router', '/api/gemini/builder'], (req, res) => {
+    res.status(404).json({ success: false, error: 'Endpoint removed or disabled.' });
   });
 
   // Vite middleware setup for development, static serve for production

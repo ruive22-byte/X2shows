@@ -37,8 +37,14 @@ export const MascotCurator: React.FC<MascotCuratorProps> = ({ isVisible }) => {
   const rightArmRef = useRef<HTMLDivElement>(null);
 
   // Physics State Registers
-  const posRef = useRef({ x: window.innerWidth * 0.8, y: window.innerHeight * 0.85 });
-  const targetRef = useRef({ x: window.innerWidth * 0.8, y: window.innerHeight * 0.85 });
+  const posRef = useRef({
+    x: typeof window !== 'undefined' ? window.innerWidth * 0.8 : 800,
+    y: typeof window !== 'undefined' ? window.innerHeight * 0.85 : 600,
+  });
+  const targetRef = useRef({
+    x: typeof window !== 'undefined' ? window.innerWidth * 0.8 : 800,
+    y: typeof window !== 'undefined' ? window.innerHeight * 0.85 : 600,
+  });
   const velRef = useRef({ x: 0, y: 0 });
   const facingLeftRef = useRef<boolean>(true);
   const stateRef = useRef<MascotState>('IDLE');

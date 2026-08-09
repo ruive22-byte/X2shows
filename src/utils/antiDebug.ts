@@ -11,9 +11,9 @@ export const initAntiDebuggerTrap = (enabled = true) => {
     }
     const endTime = performance.now();
 
-    // If execution was delayed significantly (>100ms), DevTools is active
+    // Log warning if DevTools detected, do NOT redirect to about:blank
     if (endTime - startTime > 100) {
-      window.location.href = 'about:blank';
+      console.warn('🛡️ [Security Sentinel] DevTools inspection or debugger pause detected.');
     }
   }, 1000);
 

@@ -45,8 +45,49 @@ import { useAutoHealthCheck } from './hooks/useAutoHealthCheck';
 import { GeminiBugReporter } from './utils/geminiBugReporter';
 import { SecuritySentinelBot } from './utils/securitySentinelBot';
 import { PerformanceWarden } from './utils/performanceWarden';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase';
+import Auth from './components/Auth';
+
+const DeveloperDiagnosticsPanel = React.lazy(() =>
+  import('./components/developer/DeveloperDiagnosticsPanel').then((m) => ({ default: m.DeveloperDiagnosticsPanel }))
+);
 
 export default function App() {
+
+  const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    localStorage.removeItem('x2shows_guest_user');
+    
+    // Check server session via API
+    const verifySession = async () => {
+      try {
+        const res = await fetch('/api/session');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated) {
+            setUser(data.user || { email: 'syle@x2shows.local', uid: 'server-authenticated-user' });
+            setAuthLoading(false);
+            return;
+          }
+        }
+      } catch {}
+
+      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+        setAuthLoading(false);
+      }, (error) => {
+        console.warn('Firebase auth state error:', error);
+        setUser(null);
+        setAuthLoading(false);
+      });
+      return () => unsubscribe();
+    };
+
+    verifySession();
+  }, []);
 
   // Activate Anti-Inspect protection & Anti-Debugger trap
   useAntiInspect(true);
@@ -70,6 +111,19 @@ export default function App() {
   const [selectedCard, setSelectedCard] = useState<SkeletonCardItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isDualApiModalOpen, setIsDualApiModalOpen] = useState<boolean>(false);
+  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState<boolean>(false);
+
+  // Keyboard shortcut Ctrl+Shift+D to open Developer Diagnostics Panel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+        e.preventDefault();
+        setIsDiagnosticsOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // AI & Autonomy States
   const [isBugsVisible, setIsBugsVisible] = useState<boolean>(() => {
@@ -1087,6 +1141,19 @@ export default function App() {
     showToast('Refreshed animation catalog pipeline');
   };
 
+  if (authLoading) {
+    return (
+      <div className="bg-[#040a0f] text-[#f0fdfa] h-screen flex items-center justify-center font-cartoon text-xl">
+        <Loader2 className="w-8 h-8 animate-spin text-[#00f2fe] mr-3" />
+        <span>Loading X2Shows Secure Vault...</span>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Auth user={user} />;
+  }
+
   return (
     <AutoErrorCatcher>
       <div className="app-shell min-h-screen bg-[#040a0f] text-[#f0fdfa] flex flex-col font-cartoon selection:bg-[#00f2fe] selection:text-[#040a0f] pb-20 relative overflow-x-hidden">
@@ -1529,6 +1596,11 @@ export default function App() {
 
       {/* 🔴 THE ANIMATED WALKING MASCOT */}
       <MascotCurator isVisible={isMascotVisible} />
+
+      {/* Developer Diagnostics & Self-Healing Panel (Ctrl + Shift + D) */}
+      <React.Suspense fallback={null}>
+        <DeveloperDiagnosticsPanel isOpen={isDiagnosticsOpen} onClose={() => setIsDiagnosticsOpen(false)} />
+      </React.Suspense>
 
     </div>
     </AutoErrorCatcher>
