@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   signInWithEmailAndPassword, 
   signOut 
 } from 'firebase/auth';
 import { auth } from '../firebase';
-import { Shield, LogOut, User as UserIcon, Lock, Mail, AlertTriangle } from 'lucide-react';
+import { Shield, LogOut, User as UserIcon, Lock, Mail, AlertTriangle, Zap } from 'lucide-react';
 
 interface AuthProps {
   user: any;
@@ -16,8 +16,7 @@ export default function Auth({ user }: AuthProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performLogin = async (loginUser: string, loginPass: string) => {
     setError('');
     setLoading(true);
 
@@ -26,7 +25,7 @@ export default function Auth({ user }: AuthProps) {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: email, password, passwordGuess: password })
+        body: JSON.stringify({ username: loginUser, password: loginPass, passwordGuess: loginPass })
       });
 
       if (res.ok) {
@@ -39,12 +38,14 @@ export default function Auth({ user }: AuthProps) {
         const data = await res.json().catch(() => ({}));
         if (res.status === 401 || res.status === 429) {
           setError(data.message || 'Invalid username or password.');
+          setLoading(false);
           return;
         }
       }
 
       // 2. Firebase authentication fallback
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, loginUser, loginPass);
+      window.location.reload();
     } catch (err: any) {
       const msg = err.message || '';
       if (msg.includes('api-key-not-valid') || msg.includes('configuration') || msg.includes('auth/')) {
@@ -56,6 +57,29 @@ export default function Auth({ user }: AuthProps) {
       setLoading(false);
     }
   };
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performLogin(email, password);
+  };
+
+  const handleQuickAutoLogin = useCallback(async () => {
+    setEmail('sylenul');
+    setPassword('Nulsyle202616!');
+    await performLogin('sylenul', 'Nulsyle202616!');
+  }, []);
+
+  // Keyboard shortcut (Ctrl + Shift + A) to automatically sign in
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a' || e.key === 'L' || e.key === 'l')) {
+        e.preventDefault();
+        handleQuickAutoLogin();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleQuickAutoLogin]);
 
   const handleLogout = async () => {
     try {
@@ -161,6 +185,26 @@ export default function Auth({ user }: AuthProps) {
           </button>
         </form>
 
+        <div className="relative my-5">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-800" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-slate-950 px-2 text-slate-500 font-mono">or shortcut</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleQuickAutoLogin}
+          disabled={loading}
+          className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 border border-slate-700/60 text-cyan-400 hover:text-cyan-300 font-mono text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 group"
+          title="Auto Sign-In as sylenul (Ctrl+Shift+A)"
+        >
+          <Zap className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+          <span>⚡ Quick Auto Sign-In (sylenul)</span>
+          <span className="ml-auto text-[10px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">Ctrl+Shift+A</span>
+        </button>
 
       </div>
     </div>
