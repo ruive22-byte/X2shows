@@ -32,6 +32,9 @@ export default function Auth({ user }: AuthProps) {
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
+          if (data.token) {
+            localStorage.setItem('x2shows_session_token', data.token);
+          }
           window.location.reload();
           return;
         }
@@ -91,6 +94,7 @@ export default function Auth({ user }: AuthProps) {
     } catch {}
     localStorage.removeItem('x2shows_guest_user');
     localStorage.removeItem('x2shows_auth_token');
+    localStorage.removeItem('x2shows_session_token');
     window.location.reload();
   };
 

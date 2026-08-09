@@ -234,11 +234,13 @@ async function startServer() {
       const token = createSignedSessionToken(cleanUser);
 
       const isSecure = process.env.NODE_ENV === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https';
-      const cookieHeader = `x2shows_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}${isSecure ? '; Secure' : ''}`;
+      const sameSite = isSecure ? 'SameSite=None; Secure' : 'SameSite=Lax';
+      const cookieHeader = `x2shows_session=${token}; Path=/; HttpOnly; ${sameSite}; Max-Age=${7 * 24 * 60 * 60}`;
       res.setHeader('Set-Cookie', cookieHeader);
 
       return res.json({
         success: true,
+        token: token,
         user: { email: isEmail ? cleanUser : `${cleanUser}@x2shows.local`, role: 'authenticated' }
       });
     } else {
@@ -272,7 +274,8 @@ async function startServer() {
   // Session destruction logout endpoint
   app.post('/api/logout', (req, res) => {
     const isSecure = process.env.NODE_ENV === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https';
-    res.setHeader('Set-Cookie', `x2shows_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax${isSecure ? '; Secure' : ''}`);
+    const sameSite = isSecure ? 'SameSite=None; Secure' : 'SameSite=Lax';
+    res.setHeader('Set-Cookie', `x2shows_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; ${sameSite}`);
     return res.json({ success: true, message: 'Logged out successfully' });
   });
 

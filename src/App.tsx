@@ -64,8 +64,15 @@ export default function App() {
     // Check server session via API
     const verifySession = async () => {
       try {
+        const storedToken = localStorage.getItem('x2shows_session_token');
+        const headers: Record<string, string> = {};
+        if (storedToken) {
+          headers['Authorization'] = `Bearer ${storedToken}`;
+        }
+
         const res = await fetch('/api/session', {
-          credentials: 'include'
+          credentials: 'include',
+          headers
         });
         if (res.ok) {
           const data = await res.json();
