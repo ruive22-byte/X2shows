@@ -119,12 +119,12 @@ export default function Auth({ user }: AuthProps) {
 
         <form onSubmit={handleAuth} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Email Address</label>
+            <label className="block text-xs font-medium text-slate-300 mb-1">Email or Username</label>
             <div className="relative">
               <Mail className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
               <input 
-                type="email" 
-                placeholder="you@example.com" 
+                type="text" 
+                placeholder="sylenul or you@example.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

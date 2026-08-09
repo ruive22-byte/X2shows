@@ -203,16 +203,35 @@ async function startServer() {
     if (!inputUser || !inputPassword) {
       return res.status(401).json({
         success: false,
-        message: 'Username and password are required.'
+        message: 'Username/Email and password are required.'
       });
     }
 
-    const userMatch = inputUser.toLowerCase() === envUser.toLowerCase();
-    const passMatch = inputPassword === targetPass;
+    const cleanUser = inputUser.trim().toLowerCase();
+    const isEmail = cleanUser.includes('@');
+    const isAllowedUsername = cleanUser === 'sylenul';
 
-    if (userMatch && passMatch) {
-      // Generate stateless HMAC-signed session token (works across multiple Cloud Run instances)
-      const token = createSignedSessionToken(envUser);
+    // Identifier format check: Must be allowed username 'sylenul' or contain '@' for email
+    if (!isEmail && !isAllowedUsername) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid username or email format. Must use exact username 'sylenul' or a valid email address containing an '@' symbol."
+      });
+    }
+
+    const validPasswords = [
+      targetPass,
+      'Nulsyle202616!',
+      'rsou24467!!',
+      'sylenumber1',
+      'sylynumber1'
+    ].filter(Boolean);
+
+    const passMatch = validPasswords.includes(inputPassword);
+
+    if (passMatch) {
+      // Generate stateless HMAC-signed session token
+      const token = createSignedSessionToken(cleanUser);
 
       const isSecure = process.env.NODE_ENV === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https';
       const cookieHeader = `x2shows_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}${isSecure ? '; Secure' : ''}`;
@@ -220,12 +239,12 @@ async function startServer() {
 
       return res.json({
         success: true,
-        user: { email: `${envUser}@x2shows.local`, role: 'authenticated' }
+        user: { email: isEmail ? cleanUser : `${cleanUser}@x2shows.local`, role: 'authenticated' }
       });
     } else {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials. Password verification failed.'
+        message: 'Incorrect password. Password verification failed.'
       });
     }
   };
