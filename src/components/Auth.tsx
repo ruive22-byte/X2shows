@@ -25,6 +25,7 @@ export default function Auth({ user }: AuthProps) {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ username: loginUser, password: loginPass, passwordGuess: loginPass })
       });
 
@@ -83,7 +84,7 @@ export default function Auth({ user }: AuthProps) {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/logout', { method: 'POST' });
+      await fetch('/api/logout', { method: 'POST', credentials: 'include' });
     } catch {}
     try {
       signOut(auth);

@@ -64,7 +64,9 @@ export default function App() {
     // Check server session via API
     const verifySession = async () => {
       try {
-        const res = await fetch('/api/session');
+        const res = await fetch('/api/session', {
+          credentials: 'include'
+        });
         if (res.ok) {
           const data = await res.json();
           if (data.authenticated) {
