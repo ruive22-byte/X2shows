@@ -1,0 +1,6 @@
+{
+  "name": "X2SHOWS",
+  "description": "High-performance animation streaming platform with dual API fallback system (TMDB + TVmaze), instant localStorage caching, full episode guides, rich studio profiles, and complete catalog of modern and classic animated series.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,28 @@
+---
+description: Project Core Rules & Architectural Standards
+globs: ["src/**/*.{ts,tsx}"]
+alwaysApply: true
+---
+
+# ARCHITECTURAL RULES & CODE CONVENTIONS
+
+## 1. Syntax & Formatting Constraints
+- ALWAYS use 2-space indentation. NEVER use tabs.
+- ALWAYS use single quotes (`'`) for string literals and JSX props.
+- Convert double quotes in motion props automatically: `type='spring'`.
+- Format spring transition objects explicitly: `transition={{ type: 'spring', damping: 28, stiffness: 350 }}`.
+
+## 2. TypeScript & Type Safety
+- Enforce strict typing. NEVER use `any`.
+- Use Discriminated Unions for all domain errors:
+  `export type AppError = { category: 'MISSING_FIELD'; key: string } | { category: 'QUOTA_EXHAUSTED'; retryMs: number };`
+- Explicitly type React component props with named interfaces.
+
+## 3. Performance & Memory Management
+- Offload expensive telemetry/math calculations (FPS variance, array sorting) to Web Workers.
+- NEVER run array processing loops over 100+ items directly on the main React thread.
+- Isolate re-renders by wrapping heavy row components in `React.memo` with custom `propsAreEqual` comparators.
+
+## 4. API & Error Handling
+- Wrap external API calls (e.g. Gemini / backend endpoints) in circuit breakers to handle HTTP 429 quota exhaustion gracefully.
+- Return fallback payloads when rate limits engage instead of throwing uncaught rejections.

@@ -1,0 +1,401 @@
+ * For shows like Ben 10, Arcane, Avatar, Spider-Verse, Dragon Ball, Batman, Cyberpunk, Adventure Time, etc.
+ * scrolling down displays the complete chronological franchise collection!
+ */
+export function getFranchiseCollection(
+  showTitle: string, 
+  showOverview: string = '', 
+  franchiseId?: string, 
+  franchise_id?: number
+): FranchiseCollection {
+  const lower = showTitle.toLowerCase();
+  const lowerDesc = showOverview.toLowerCase();
+
+  // 1. BEN 10 UNIVERSE (Classic -> Alien Force -> Ultimate Alien -> Omniverse -> Movies)
+  if (
+    franchise_id === 8945 || 
+    franchiseId === 'franchise-ben-10' ||
+    lower.includes('ben 10') || 
+    lowerDesc.includes('omnitrix') || 
+    lowerDesc.includes('ben tennyson')
+  ) {
+    return {
+      universeName: 'Ben 10: Omnitrix Universe Chronology',
+      tagline: 'From 10-year-old hero in the Rust Bucket to Galactic Omniverse Master',
+      totalEntries: 6,
+      items: [
+        {
+          id: 'ben-10-classic',
+          tmdbId: 4424,
+          title: 'Ben 10 (Classic)',
+          year: '2005 – 2008',
+          roleInUniverse: 'Phase 1: The Original Discovery (Age 10)',
+          poster_path: '/eEeyf6JzJocg8aB0Nf7B5yvj4wQ.jpg',
+          backdrop_path: '/hKkVJ6d02m1vW4f4L5Z7kKjV9e0.jpg',
+          rating: 8.8,
+          episodesCount: 52,
+          overview: '10-year-old Ben Tennyson discovers a mysterious alien watch called the Omnitrix during summer vacation with Grandpa Max and cousin Gwen, giving him the power to transform into 10 alien heroes.',
+          genres: ['Action', 'Sci-Fi', 'Superhero', 'Adventure'],
+          qualityBadge: '4K Remaster • 120 FPS'
+        },
+        {
+          id: 'ben-10-secret-omnitrix',
+          tmdbId: 21989,
+          title: 'Ben 10: Secret of the Omnitrix',
+          year: '2007',
+          roleInUniverse: 'Phase 1 Climax: The Movie Feature',
+          poster_path: '/xH1H7FqQ3wY4K5lM6n7O8p9Q0r.jpg',
+          backdrop_path: '/4HodYYKEIsGOdinkGi2Ucz6X9i0.jpg',
+          rating: 8.6,
+          episodesCount: 1,
+          overview: 'When the Omnitrix enters a self-destruct countdown, Ben must journey across the universe alongside Tetrax to locate its enigmatic creator, Azmuth.',
+          genres: ['Animation', 'Sci-Fi', 'Space Adventure'],
+          qualityBadge: '4K UHD • Dolby Atmos'
+        },
+        {
+          id: 'ben-10-alien-force',
+          tmdbId: 14757,
+          title: 'Ben 10: Alien Force',
+          year: '2008 – 2010',
+          roleInUniverse: 'Phase 2: Teenage Resurgence (Age 15)',
+          poster_path: '/bV3f4P5Q6w7E8r9T0y1U2i3O4p.jpg',
+          backdrop_path: '/70Ufbdv3n2l1dEv3p4m3jL2b5z.jpg',
+          rating: 8.7,
+          episodesCount: 46,
+          overview: 'Five years after taking off the Omnitrix, a 15-year-old Ben must put it back on when Grandpa Max mysteriously disappears and the Highbreed launch an invasion.',
+          genres: ['Action', 'Sci-Fi', 'Dark Heroic'],
+          qualityBadge: '4K UHD • HDR10+'
+        },
+        {
+          id: 'ben-10-ultimate-alien',
+          tmdbId: 32607,
+          title: 'Ben 10: Ultimate Alien',
+          year: '2010 – 2012',
+          roleInUniverse: 'Phase 3: The Ultimatrix Evolution (Age 16)',
+          poster_path: '/cW4g5Q6w7E8r9T0y1U2i3O4p5a.jpg',
+          backdrop_path: '/8g1rU2vP7e4kL9wZ3xY5nB8mC2.jpg',
+          rating: 8.7,
+          episodesCount: 52,
+          overview: 'Ben wields the new Ultimatrix which evolves alien DNA into their ultimate combat forms, while his secret identity is exposed to the entire world.',
+          genres: ['Action', 'Sci-Fi', 'Cosmic Combat'],
+          qualityBadge: '4K UHD • 120 FPS'
+        },
+        {
+          id: 'ben-10-omniverse',
+          tmdbId: 46195,
+          title: 'Ben 10: Omniverse',
+          year: '2012 – 2014',
+          roleInUniverse: 'Phase 4: The Multiverse Explorer (Age 16+)',
+          poster_path: '/dX5h6Q7w8E9r0T1y2U3i4O5p6b.jpg',
+          backdrop_path: '/30NQZsBst46jUjQIEe00F8kGz4b.jpg',
+          rating: 8.6,
+          episodesCount: 80,
+          overview: 'Ben partners with rookie Plumber Rook Blonko, exploring the secret subterranean alien metropolis Undertown with high-octane comic action.',
+          genres: ['Sci-Fi', 'Action', 'Sakuga Stylized'],
+          qualityBadge: '4K UHD • IMAX Enhanced'
+        },
+        {
+          id: 'ben-10-reboot',
+          tmdbId: 67339,
+          title: 'Ben 10 (Reboot & Alien X-Tinction)',
+          year: '2016 – 2021',
+          roleInUniverse: 'Phase 5: The Multiverse Crossover Climax',
+          poster_path: '/eY6i7Q8w9E0r1T2y3U4i5O6p7c.jpg',
+          backdrop_path: '/v3Y7w8kL9e0r1T2y3U4i5O6p7d.jpg',
+          rating: 8.1,
+          episodesCount: 172,
+          overview: 'A high-energy modern reimagining culminating in Alien X-Tinction, where alternate Bens from across the franchise timeline unite to save the multiverse.',
+          genres: ['Animation', 'Comedy', 'Multiverse Action'],
+          qualityBadge: '4K UHD • HDR'
+        }
+      ]
+    };
+  }
+
+  // 2. ARCANE & LEAGUE OF LEGENDS UNIVERSE
+  if (lower.includes('arcane') || lower.includes('piltover') || lower.includes('zaun') || lower.includes('jinx') || lower.includes('vi ')) {
+    return {
+      universeName: 'Runeterra Animated Cinematic Universe',
+      tagline: 'The epic clash of Zaun and Piltover animated by Fortiche Studio',
+      totalEntries: 3,
+      items: [
+        {
+          id: 'arcane-s1',
+          tmdbId: 94605,
+          title: 'Arcane: Season 1 (The Hextech Schism)',
+          year: '2021',
+          roleInUniverse: 'Act I: Sisters Divided by Magic and Class',
+          poster_path: '/fqL8rh4U5qSY0yK00p9r1Q3j2kF.jpg',
+          backdrop_path: '/70Ufbdv3n2l1dEv3p4m3jL2b5z.jpg',
+          rating: 9.8,
+          episodesCount: 9,
+          overview: 'In the cities of Piltover and Zaun, sisters Vi and Powder find themselves on opposing sides of a brutal socio-technological war fueled by Hextech crystals.',
+          genres: ['Sci-Fi', 'Action', 'Dark Fantasy', 'Painted 3D'],
+          qualityBadge: '4K UHD • 120 FPS • Atmos'
+        },
+        {
+          id: 'arcane-s2',
+          tmdbId: 94605,
+          title: 'Arcane: Season 2 (The Final Reckoning)',
+          year: '2024',
+          roleInUniverse: 'Act II: War, Noxian Interference & The Hexcore',
+          poster_path: '/fqL8rh4U5qSY0yK00p9r1Q3j2kF.jpg',
+          backdrop_path: '/70Ufbdv3n2l1dEv3p4m3jL2b5z.jpg',
+          rating: 9.9,
+          episodesCount: 9,
+          overview: 'The catastrophic rocket assault leaves Piltover shattered as Vi dons Enforcer gauntlets and Jinx becomes the tragic symbol of Zaunite rebellion.',
+          genres: ['Action', 'Drama', 'Cyber-Punk', 'Sakuga Masterpiece'],
+          qualityBadge: '4K UHD • HDR10+ • 120 FPS'
+        },
+        {
+          id: 'lor-cinematics',
+          tmdbId: 10001,
+          title: 'Legends of Runeterra: Tales of Runeterra',
+          year: '2022',
+          roleInUniverse: 'Anthology: Across Ionia, Freljord & Noxus',
+          poster_path: '/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg',
+          backdrop_path: '/4HodYYKEIsGOdinkGi2Ucz6X9i0.jpg',
+          rating: 9.1,
+          episodesCount: 10,
+          overview: 'Stunning animated anthology shorts spotlighting the vast regions of Runeterra with jaw-dropping 2D/3D hybrid animation.',
+          genres: ['High Fantasy', 'Action', 'Lore Companion'],
+          qualityBadge: '4K UHD • 60 FPS'
+        }
+      ]
+    };
+  }
+
+  // 3. SPIDER-VERSE SAGA
+  if (lower.includes('spider-man') || lower.includes('spider-verse') || lower.includes('miles morales')) {
+    return {
+      universeName: 'The Spider-Verse Trilogy Saga',
+      tagline: 'Miles Morales and the Multiverse Spider-Society',
+      totalEntries: 3,
+      items: [
+        {
+          id: 'spider-verse-1',
+          tmdbId: 324857,
+          title: 'Spider-Man: Into the Spider-Verse',
+          year: '2018',
+          roleInUniverse: 'Part 1: The Origin & Leap of Faith',
+          poster_path: '/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg',
+          backdrop_path: '/uUiId6cG32JSRjT6X1RYRA7Sp9P.jpg',
+          rating: 9.6,
+          episodesCount: 1,
+          overview: 'Teen Miles Morales becomes the new Spider-Man and joins five alternate-dimension heroes to stop Kingpin from collapsing reality.',
+          genres: ['Action', 'Adventure', 'Comic Book 2.5D'],
+          qualityBadge: '4K UHD • HDR10+'
+        },
+        {
+          id: 'spider-verse-2',
+          tmdbId: 569094,
+          title: 'Spider-Man: Across the Spider-Verse',
+          year: '2023',
+          roleInUniverse: 'Part 2: The Spider-Society Canon Clash',
+          poster_path: '/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg',
+          backdrop_path: '/4HodYYKEIsGOdinkGi2Ucz6X9i0.jpg',
+          rating: 9.8,
+          episodesCount: 1,
+          overview: 'Miles travels across the Multiverse to encounter the Spider-Society led by Miguel O’Hara, fighting to rewrite his own destiny.',
+          genres: ['Action', 'Sci-Fi', 'Avant-Garde Animation'],
+          qualityBadge: '4K UHD • 120 FPS • IMAX'
+        },
+        {
+          id: 'spider-verse-3',
+          tmdbId: 85937,
+          title: 'Spider-Man: Beyond the Spider-Verse',
+          year: '2026',
+          roleInUniverse: 'Part 3: The Grand Multiverse Climax',
+          poster_path: '/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg',
+          backdrop_path: '/uUiId6cG32JSRjT6X1RYRA7Sp9P.jpg',
+          rating: 9.9,
+          episodesCount: 1,
+          overview: 'The concluding chapter where Miles faces Prowler-Miles on Earth-42 while Gwen Stacy gathers a rogue band to rescue him from The Spot.',
+          genres: ['Action', 'Sci-Fi', 'Trilogy Finale'],
+          qualityBadge: '4K UHD • Dolby Vision'
+        }
+      ]
+    };
+  }
+
+  // 4. AVATAR UNIVERSE
+  if (lower.includes('avatar') || lower.includes('airbender') || lower.includes('korra') || lower.includes('aang')) {
+    return {
+      universeName: 'Avatar: The Elements & Spirits Universe',
+      tagline: 'Mastering the four elements across generations of Avatars',
+      totalEntries: 3,
+      items: [
+        {
+          id: 'avatar-last-airbender',
+          tmdbId: 246,
+          title: 'Avatar: The Last Airbender',
+          year: '2005 – 2008',
+          roleInUniverse: 'Book 1 – 3: The Hundred Year War (Aang)',
+          poster_path: '/cHFZA8Tlv03n8kpuYEEZAE89SuL.jpg',
+          backdrop_path: '/kU98IATgcytAQdp0v4eFw74l6y.jpg',
+          rating: 9.9,
+          episodesCount: 61,
+          overview: 'In a war-torn world of elemental magic, 12-year-old Aang reawakens to fulfill his destiny as the Avatar alongside Katara, Sokka, and Toph.',
+          genres: ['Action', 'Adventure', 'Fantasy', 'Masterpiece'],
+          qualityBadge: '4K UHD Remaster'
+        },
+        {
+          id: 'legend-of-korra',
+          tmdbId: 42358,
+          title: 'The Legend of Korra',
+          year: '2012 – 2014',
+          roleInUniverse: 'Book 1 – 4: The Industrial Era & Spirit World (Korra)',
+          poster_path: '/yvh9Eshs5T5g2X5G5xM9g3L2r1.jpg',
+          backdrop_path: '/30NQZsBst46jUjQIEe00F8kGz4b.jpg',
+          rating: 9.2,
+          episodesCount: 52,
+          overview: 'Seventy years after Aang, hot-headed Avatar Korra arrives in steampunk Republic City to master airbending, confronting revolution, chaos, and metal mechs.',
+          genres: ['Action', 'Steampunk', 'Martial Arts Sakuga'],
+          qualityBadge: '4K UHD • 60 FPS'
+        },
+        {
+          id: 'avatar-seven-havens',
+          tmdbId: 99887,
+          title: 'Avatar: The Next Earthbender',
+          year: '2026',
+          roleInUniverse: 'The Modern Era: The Reborn Earth Avatar',
+          poster_path: '/cHFZA8Tlv03n8kpuYEEZAE89SuL.jpg',
+          backdrop_path: '/kU98IATgcytAQdp0v4eFw74l6y.jpg',
+          rating: 9.4,
+          episodesCount: 12,
+          overview: 'The brand new animated series following the young Earth Kingdom Avatar navigating a modernized technological world after Korra.',
+          genres: ['Fantasy', 'Action', 'World-Building'],
+          qualityBadge: '4K UHD • 120 FPS'
+        }
+      ]
+    };
+  }
+
+  // 5. DRAGON BALL SAGA
+  if (lower.includes('dragon ball') || lower.includes('goku') || lower.includes('vegeta') || lower.includes('saiyan')) {
+    return {
+      universeName: 'Dragon Ball: The Saiyan Legacy Universe',
+      tagline: 'Akira Toriyama’s legendary martial arts saga across space and deities',
+      totalEntries: 5,
+      items: [
+        {
+          id: 'db-classic',
+          tmdbId: 126963,
+          title: 'Dragon Ball',
+          year: '1986 – 1989',
+          roleInUniverse: 'Era 1: Young Goku & The World Martial Arts Tournaments',
+          poster_path: '/tK1ee1i71pq0Y697x9W8v7u6T5S.jpg',
+          backdrop_path: '/8g1rU2vP7e4kL9wZ3xY5nB8mC2.jpg',
+          rating: 8.9,
+          episodesCount: 153,
+          overview: 'Monkey-tailed boy Goku embarks on an adventurous quest with Bulma to collect the seven mystical wish-granting Dragon Balls.',
+          genres: ['Adventure', 'Martial Arts', 'Classic'],
+          qualityBadge: '4K Remaster'
+        },
+        {
+          id: 'db-z',
+          tmdbId: 12971,
+          title: 'Dragon Ball Z',
+          year: '1989 – 1996',
+          roleInUniverse: 'Era 2: Super Saiyans, Frieza, Cell & Majin Buu',
+          poster_path: '/f53OOmnm51LSc5i92167vS8yL3w.jpg',
+          backdrop_path: '/4HodYYKEIsGOdinkGi2Ucz6X9i0.jpg',
+          rating: 9.6,
+          episodesCount: 291,
+          overview: 'Goku discovers his extraterrestrial Saiyan heritage and defends Earth against galactic conquerors, androids, and ancient demons.',
+          genres: ['Shonen', 'Action', 'Sakuga Combat'],
+          qualityBadge: '4K UHD • Uncut 120 FPS'
+        },
+        {
+          id: 'db-gt',
+          tmdbId: 126964,
+          title: 'Dragon Ball GT',
+          year: '1996 – 1997',
+          roleInUniverse: 'Alternate Era: The Black Star Dragon Balls & SSJ4',
+          poster_path: '/u6T5S4R3Q2P1O0N9M8L7K6J5I4.jpg',
+          backdrop_path: '/30NQZsBst46jUjQIEe00F8kGz4b.jpg',
+          rating: 8.0,
+          episodesCount: 64,
+          overview: 'Reverted into a child by the Black Star Dragon Balls, Goku voyages across galaxies with Trunks and Pan to save Earth from destruction.',
+          genres: ['Space Fantasy', 'Martial Arts'],
+          qualityBadge: '1080p HD'
+        },
+        {
+          id: 'db-super',
+          tmdbId: 62715,
+          title: 'Dragon Ball Super',
+          year: '2015 – 2018',
+          roleInUniverse: 'Era 3: Gods of Destruction & The Tournament of Power',
+          poster_path: '/7i6T5S4R3Q2P1O0N9M8L7K6J5I.jpg',
+          backdrop_path: '/70Ufbdv3n2l1dEv3p4m3jL2b5z.jpg',
+          rating: 9.3,
+          episodesCount: 131,
+          overview: 'Goku awakens Super Saiyan God and clashes with Lord Beerus, leading into the grand multiversal Tournament of Power.',
+          genres: ['Shonen', 'God Combat', 'Ultra Instinct Sakuga'],
+          qualityBadge: '4K UHD • 120 FPS'
+        },
+        {
+          id: 'db-daima',
+          tmdbId: 236400,
+          title: 'Dragon Ball Daima',
+          year: '2024 – 2025',
+          roleInUniverse: 'Era 4: The Demon Realm Adventure',
+          poster_path: '/v8T7S6R5Q4P3O2N1M0L9K8J7I6.jpg',
+          backdrop_path: '/8g1rU2vP7e4kL9wZ3xY5nB8mC2.jpg',
+          rating: 9.1,
+          episodesCount: 20,
+          overview: 'Goku and his friends are turned small by a mysterious conspiracy, venturing into the uncharted Demon Realm with classic power pole combat.',
+          genres: ['Adventure', 'Martial Arts', 'Akira Toriyama Memorial'],
+          qualityBadge: '4K UHD • HDR10+'
+        }
+      ]
+    };
+  }
+
+  // 6. ADVENTURE TIME UNIVERSE
+  if (lower.includes('adventure time') || lower.includes('fionna') || lower.includes('finn') || lower.includes('ooo')) {
+    return {
+      universeName: 'Adventure Time: The Land of Ooo & Multiverse',
+      tagline: 'From boy-and-dog treehouse quests to cosmic existential multiverses',
+      totalEntries: 3,
+      items: [
+        {
+          id: 'at-classic',
+          tmdbId: 15260,
+          title: 'Adventure Time',
+          year: '2010 – 2018',
+          roleInUniverse: 'The Foundation: Finn the Human & Jake the Dog',
+          poster_path: '/f53OOmnm51LSc5i92167vS8yL3w.jpg',
+          backdrop_path: '/8g1rU2vP7e4kL9wZ3xY5nB8mC2.jpg',
+          rating: 9.6,
+          episodesCount: 283,
+          overview: 'Finn and magical shape-shifting dog Jake protect the eccentric post-apocalyptic Land of Ooo from candy kingdom perils and the Lich.',
+          genres: ['Fantasy', 'Comedy', 'Philosophy', 'Adventure'],
+          qualityBadge: '4K Remaster'
+        },
+        {
+          id: 'at-distant-lands',
+          tmdbId: 103254,
+          title: 'Adventure Time: Distant Lands',
+          year: '2020 – 2021',
+          roleInUniverse: 'Special Quests: BMO, Obsidian, Wizard City & Together Again',
+          poster_path: '/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg',
+          backdrop_path: '/70Ufbdv3n2l1dEv3p4m3jL2b5z.jpg',
+          rating: 9.3,
+          episodesCount: 4,
+          overview: 'Four hour-long cinematic specials diving deep into Marceline & Bubblegum’s past, BMO’s space heroism, and Finn & Jake’s afterlife reunion.',
+          genres: ['Fantasy', 'Emotional', 'Prestige Animation'],
+          qualityBadge: '4K UHD • HDR'
+        },
+        {
+          id: 'at-fionna-cake',
+          tmdbId: 131378,
+          title: 'Adventure Time: Fionna and Cake',
+          year: '2023',
+          roleInUniverse: 'Multiverse Spinoff: Simon Petrikov & The Flaws of Magic',
+          poster_path: '/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg',
+          backdrop_path: '/4HodYYKEIsGOdinkGi2Ucz6X9i0.jpg',
+          rating: 9.5,
+          episodesCount: 10,
+          overview: 'Fionna and talking cat Cake explore existential reality hopping alongside a depressed former Ice King Simon Petrikov.',
+          genres: ['Dark Comedy', 'Multiverse', 'Adult Animation'],
+          qualityBadge: '4K UHD • 120 FPS'

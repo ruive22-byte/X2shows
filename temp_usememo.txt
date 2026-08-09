@@ -1,0 +1,251 @@
+502:  const tabSections = useMemo<SkeletonSection[]>(() => {
+503-    if (activeNav === 'Movies') {
+504-      const allMovies = dynamicCatalog.filter(s => s.media_type === 'movie' || s.navType === 'Movies');
+505-      const top10Movies = allMovies.slice(0, 10);
+506-      const ghibliAndArt = allMovies.filter(s => s.studio?.includes('Ghibli') || s.studio?.includes('CoMix') || s.genres.includes('Fantasy') || s.genres.includes('Adventure'));
+507-      const superheroAndSakuga = allMovies.filter(s => s.genres.includes('Action') || s.genres.includes('Superhero') || s.genres.includes('Sci-Fi'));
+508-
+509-      return [
+510-        {
+511-          id: 'movies-top-10',
+512-          title: 'Top 10',
+513-          subtitle: 'The 10 highest-rated and most acclaimed animated feature films on TMDB',
+514-          badge: 'TOP 10 MOVIES',
+515-          isTopTen: true,
+516-          cards: top10Movies.map((m, idx) => transformTmdbShowToSkeletonCard(m, 'Top 10', idx + 1))
+517-        },
+518-        {
+519-          id: 'movies-for-you',
+520-          title: 'For You',
+521-          subtitle: 'Theatrical animation masterpieces with 97%+ match score and IMAX master audio',
+522-          badge: 'FOR YOU',
+523-          isTopTen: false,
+524-          cards: allMovies.filter(m => (m.matchScore && m.matchScore >= 97) || m.vote_average >= 8.3).map(m => transformTmdbShowToSkeletonCard(m, 'For You'))
+525-        },
+526-        {
+527-          id: 'movies-ghibli',
+528-          title: 'Cause You Like',
+529-          subtitle: 'Studio Ghibli & legendary hand-drawn masterworks from Hayao Miyazaki & Makoto Shinkai',
+530-          badge: 'GHIBLI & MASTERWORKS',
+531-          isTopTen: false,
+532-          cards: (ghibliAndArt.length > 0 ? ghibliAndArt : allMovies).map(m => transformTmdbShowToSkeletonCard(m, 'Cause You Like'))
+533-        },
+534-        {
+535-          id: 'movies-superhero',
+536-          title: 'Explore More',
+537-          subtitle: 'Mind-bending multiversal action, superhero blockbusters, and theatrical sakuga',
+538-          badge: 'SUPERHERO & ACTION',
+539-          isTopTen: false,
+540-          cards: (superheroAndSakuga.length > 0 ? superheroAndSakuga : allMovies).map(m => transformTmdbShowToSkeletonCard(m, 'Explore More'))
+541-        }
+542-      ];
+543-    }
+544-
+545-    if (activeNav === 'Anime') {
+546-      const allAnime = dynamicCatalog.filter(s => s.navType === 'Anime' || s.genres.some(g => ['Anime', 'Shonen', 'Sakuga', 'Supernatural', 'Cyberpunk'].includes(g)) || s.studio?.includes('MAPPA') || s.studio?.includes('ufotable') || s.studio?.includes('A-1') || s.studio?.includes('TRIGGER') || s.studio?.includes('WIT') || s.studio?.includes('Toei') || s.studio?.includes('Bones') || s.studio?.includes('Madhouse'));
+547-      const top10Anime = allAnime.slice(0, 10);
+548-      const shonenSakuga = allAnime.filter(s => s.genres.some(g => ['Action', 'Shonen', 'Sakuga', 'Supernatural'].includes(g)));
+549-      const darkFantasy = allAnime.filter(s => s.genres.some(g => ['Dark Fantasy', 'Cyberpunk', 'Sci-Fi', 'Mystery', 'Crime'].includes(g)));
+550-
+551-      return [
+552-        {
+553-          id: 'anime-top-10',
+554-          title: 'Top 10',
+555-          subtitle: 'The top 10 anime series dominating worldwide streaming charts with 120 FPS sakuga',
+556-          badge: 'TOP 10 ANIME',
+557-          isTopTen: true,
+558-          cards: top10Anime.map((a, idx) => transformTmdbShowToSkeletonCard(a, 'Top 10', idx + 1))
+559-        },
+560-        {
+561-          id: 'anime-for-you',
+562-          title: 'For You',
+563-          subtitle: 'Hand-picked shonen phenomena, supernatural masterworks, and fluid combat choreography',
+564-          badge: 'FOR YOU',
+565-          isTopTen: false,
+566-          cards: allAnime.filter(a => a.matchScore >= 97 || a.vote_average >= 8.5).map(a => transformTmdbShowToSkeletonCard(a, 'For You'))
+567-        },
+568-        {
+569-          id: 'anime-shonen',
+570-          title: 'Cause You Like',
+571-          subtitle: 'High-impact fight choreography, domain expansions, and relentless power awakenings',
+572-          badge: 'SHONEN SAKUGA',
+573-          isTopTen: false,
+574-          cards: (shonenSakuga.length > 0 ? shonenSakuga : allAnime).map(a => transformTmdbShowToSkeletonCard(a, 'Cause You Like'))
+575-        },
+576-        {
+577-          id: 'anime-dark',
+578-          title: 'Explore More',
+579-          subtitle: 'Dystopian neon cities, psychological thrillers, and deep multi-arc dark fantasy journeys',
+580-          badge: 'DARK FANTASY & SCI-FI',
+581-          isTopTen: false,
+582-          cards: (darkFantasy.length > 0 ? darkFantasy : allAnime).map(a => transformTmdbShowToSkeletonCard(a, 'Explore More'))
+583-        }
+584-      ];
+585-    }
+586-
+587-    if (activeNav === 'Toons') {
+588-      const allToons = dynamicCatalog.filter(s => s.navType === 'Toons' || (s.media_type === 'tv' && s.navType !== 'Anime') || s.studio?.includes('Cartoon Network') || s.studio?.includes('Nickelodeon') || s.studio?.includes('Disney') || s.studio?.includes('Warner Bros') || s.studio?.includes('Fortiche') || s.studio?.includes('Skybound'));
+589-      const top10Toons = allToons.slice(0, 10);
+590-      const cnClassics = allToons.filter(s => s.studio?.includes('Cartoon Network') || s.studio?.includes('Warner Bros') || s.genres.includes('Action'));
+591-      const loreAndAction = allToons.filter(s => s.genres.some(g => ['Dark Fantasy', 'Sci-Fi', 'Action', 'Adventure', 'Mystery'].includes(g)) || s.matchScore >= 98);
+592-
+593-      return [
+594-        {
+595-          id: 'toons-top-10',
+596-          title: 'Top 10',
+597-          subtitle: 'The greatest western animated series, action blockbusters, and nostalgic cartoon favorites',
+598-          badge: 'TOP 10 TOONS',
+599-          isTopTen: true,
+600-          cards: top10Toons.map((t, idx) => transformTmdbShowToSkeletonCard(t, 'Top 10', idx + 1))
+601-        },
+602-        {
+603-          id: 'toons-for-you',
+604-          title: 'For You',
+605-          subtitle: 'Beloved western animation with rich lore, dynamic character arcs, and iconic art styles',
+606-          badge: 'FOR YOU',
+607-          isTopTen: false,
+608-          cards: allToons.filter(t => t.matchScore >= 97 || t.vote_average >= 8.5).map(t => transformTmdbShowToSkeletonCard(t, 'For You'))
+609-        },
+610-        {
+611-          id: 'toons-cn',
+612-          title: 'Cause You Like',
+613-          subtitle: 'Cartoon Network golden age legends, superhero teams, and action-packed nostalgic adventures',
+614-          badge: 'ACTION & CLASSICS',
+615-          isTopTen: false,
+616-          cards: (cnClassics.length > 0 ? cnClassics : allToons).map(t => transformTmdbShowToSkeletonCard(t, 'Cause You Like'))
+617-        },
+618-        {
+619-          id: 'toons-lore',
+620-          title: 'Explore More',
+621-          subtitle: 'Deep world-building, intricate fantasy lore, surreal comedy, and high-stakes animation',
+622-          badge: 'LORE & DISCOVERY',
+623-          isTopTen: false,
+624-          cards: (loreAndAction.length > 0 ? loreAndAction : allToons).map(t => transformTmdbShowToSkeletonCard(t, 'Explore More'))
+625-        }
+626-      ];
+627-    }
+628-
+629-    if (activeNav === 'Newly Added') {
+630-      // Reverse dynamicCatalog so the most recently appended shows are first
+631-      const newlyAddedAll = [...dynamicCatalog].reverse();
+632-
+633-      return [
+634-        {
+635-          id: 'newly-added-grid',
+636-          title: 'Newly Added',
+637-          subtitle: 'The freshest cartoons, anime, and animated movies just added to the platform.',
+638-          badge: 'ALL NEW ARRIVALS',
+639-          isTopTen: false,
+640-          cards: newlyAddedAll.map(t => transformTmdbShowToSkeletonCard(t, 'Newly Added'))
+641-        }
+642-      ];
+643-    }
+644-
+645-    if (activeNav === 'Trending') {
+646-      const trendingList = dynamicCatalog.filter(s => (s.matchScore && s.matchScore >= 95) || (s.trendingRank && s.trendingRank <= 10) || s.vote_average >= 8.4);
+647-      const top10Trending = trendingList.slice(0, 10);
+648-      const match99 = dynamicCatalog.filter(s => s.matchScore >= 98);
+649-      const viralSensations = dynamicCatalog.filter(s => s.vote_count >= 2000 || s.matchScore >= 97);
+650-
+651-      return [
+652-        {
+653-          id: 'trending-top-10',
+654-          title: 'Top 10',
+655-          subtitle: 'The 10 hottest cartoon and anime releases with viral velocity and massive global viewership',
+656-          badge: 'TOP 10 TRENDING',
+657-          isTopTen: true,
+658-          cards: top10Trending.map((t, idx) => transformTmdbShowToSkeletonCard(t, 'Top 10', idx + 1))
+659-        },
+660-        {
+661-          id: 'trending-match-99',
+662-          title: 'For You',
+663-          subtitle: 'Near-perfect 98%+ match score animation hand-picked by our real-time recommendation engine',
+664-          badge: '99% MATCH',
+665-          isTopTen: false,
+666-          cards: match99.map(t => transformTmdbShowToSkeletonCard(t, 'For You'))
+667-        },
+668-        {
+669-          id: 'trending-viral',
+670-          title: 'Cause You Like',
+671-          subtitle: 'Global pop-culture sensations breaking records across Crunchyroll, Netflix & Max',
+672-          badge: 'VIRAL PHENOMENA',
+673-          isTopTen: false,
+674-          cards: viralSensations.map(t => transformTmdbShowToSkeletonCard(t, 'Cause You Like'))
+675-        },
+676-        {
+677-          id: 'trending-explore',
+678-          title: 'Explore More',
+679-          subtitle: 'Rapidly rising animated shows and movies trending with community viewers this week',
+680-          badge: 'TRENDING DISCOVERY',
+681-          isTopTen: false,
+682-          cards: trendingList.map(t => transformTmdbShowToSkeletonCard(t, 'Explore More'))
+683-        }
+684-      ];
+685-    }
+686-
+687-    // Default 'TV' (TV Shows - Cartoon shows & episodic series only, no standalone movies)
+688-    const allTvShows = dynamicCatalog.filter(s => s.media_type === 'tv' || s.navType === 'TV' || s.navType === 'Toons' || s.navType === 'Anime');
+689-    const top10Tv = allTvShows.slice(0, 10);
+690-    
+691-    // Create newly added shows based on addition order (reverse of array)
+692-    const newlyAddedTv = [...dynamicCatalog].reverse().slice(0, 25);
+693-    
+694-    const multiSeason = allTvShows.filter(s => s.seasonCount >= 2 || s.totalEpisodes >= 15);
+695-    const cartoonTvShows = allTvShows.filter(s => s.navType === 'Toons' || s.navType === 'TV' || s.studio?.includes('Cartoon') || s.studio?.includes('Nickelodeon') || s.studio?.includes('Disney') || s.studio?.includes('Warner'));
+696-
+697-    return [
+698-      {
+699-        id: 'tv-newly-added',
+700-        title: 'Newly Added',
+701-        subtitle: 'The newest cartoons and anime just added to the catalog',
+702-        badge: 'NEW ARRIVALS',
+703-        isTopTen: false,
+704-        onExploreClick: () => setActiveNav('Newly Added'), // Handled directly in SkeletonRow or App
+705-        hasExploreArrow: true,
+706-        cards: newlyAddedTv.map((tv, idx) => transformTmdbShowToSkeletonCard(tv, 'Newly Added', idx + 1))
+707-      },
+708-      {
+709-        id: 'tv-top-10',
+710-        title: 'Top 10',
+711-        subtitle: 'The top 10 highest-rated animated TV series and cartoon shows streaming right now',
+712-        badge: 'TOP 10 TV SHOWS',
+713-        isTopTen: true,
+714-        cards: top10Tv.map((tv, idx) => transformTmdbShowToSkeletonCard(tv, 'Top 10', idx + 1))
+715-      },
+716-      {
+717-        id: 'tv-for-you',
+718-        title: 'For You',
+719-        subtitle: 'Episodic animated adventures, character-driven story arcs, and multi-season sagas',
+720-        badge: 'FOR YOU',
+721-        isTopTen: false,
+722-        cards: allTvShows.filter(t => t.matchScore >= 97 || t.vote_average >= 8.5).map(tv => transformTmdbShowToSkeletonCard(tv, 'For You'))
+723-      },
+724-      {
+725-        id: 'tv-multi-season',
+726-        title: 'Cause You Like',
+727-        subtitle: 'Binge-worthy multi-season sagas, massive world-building, and long-running animation epics',
+728-        badge: 'MULTI-SEASON SAGAS',
+729-        isTopTen: false,
+730-        cards: (multiSeason.length > 0 ? multiSeason : allTvShows).map(tv => transformTmdbShowToSkeletonCard(tv, 'Cause You Like'))
+731-      },
+732-      {
+733-        id: 'tv-cartoons',
+734-        title: 'Explore More',
+735-        subtitle: 'Explore the complete cartoon and animated TV vault from classic nostalgia to modern sakuga',
+736-        badge: 'CARTOON & TV VAULT',
+737-        isTopTen: false,
+738-        cards: (cartoonTvShows.length > 0 ? cartoonTvShows : allTvShows).map(tv => transformTmdbShowToSkeletonCard(tv, 'Explore More'))
+739-      }
+740-    ];
+741-  }, [activeNav, dynamicCatalog]);
+742-
+743-  // Spotlight Hero Item dynamically selected based on the active navigation tab
+744-  const activeHeroItem = useMemo<TmdbAnimatedShow>(() => {
+745-    if (activeNav === 'Movies') {
+746-      return dynamicCatalog.find(s => s.media_type === 'movie' || s.navType === 'Movies') || dynamicCatalog[1];
+747-    }
+748-    if (activeNav === 'Anime') {
+749-      return dynamicCatalog.find(s => s.navType === 'Anime' || s.id === 'tmdb-tv-136283') || dynamicCatalog[2];
+750-    }
+751-    if (activeNav === 'Toons') {
+752-      return dynamicCatalog.find(s => s.navType === 'Toons' || s.id === 'avatar-the-last-airbender' || s.id === 'tmdb-tv-94605') || dynamicCatalog[0];
