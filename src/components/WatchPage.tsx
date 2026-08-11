@@ -1,33 +1,42 @@
+import { assertIdentity, ContentIdentityMismatchError } from '../services/resolvers/ContentIdentityValidator';
+import { DiagnosticPanel } from "./DiagnosticPanel";
 import React, { useState, useEffect, useRef } from 'react';
-import { 
+import {   
   Play, Pause, Volume2, VolumeX, Maximize, Minimize, 
   RotateCcw, RotateCw, SkipForward, SkipBack, Settings, 
   Sparkles, X, ChevronRight, ChevronDown, Check, Eye, Sliders, 
   Server, Tv, Film, Star, Heart, Plus, Share2, 
   ArrowLeft, ShieldCheck, Zap, Layers, RefreshCw, Radio,
-  Tv2, Keyboard, Users, Folder, FolderOpen, PlayCircle, Cpu
+  Tv2, Keyboard, Users, Folder, FolderOpen, PlayCircle, Cpu, ExternalLink
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { TmdbAnimatedShow, TMDB_ANIMATED_CATALOG } from '../data/tmdbData';
-import { TmdbImage } from './TmdbImage';
-import { getRelatedShows } from '../utils/relatedResolver';
-import { globalCatalogIndex } from '../utils/globalCatalog';
-import { ServerSelector } from './ServerSelector';
-import { SeasonFetcherService, Episode } from '../services/seasonFetcherService';
-import { WatchProgressTracker } from '../utils/watchProgressTracker';
-import { PlaybackStateHelper, PlaybackSettings } from '../utils/playbackStateHelper';
-import { PlayerButtonFactory } from '../utils/playerButtonFactory';
-import { UpscaleConfig, UpscalerResolver } from '../utils/upscalerResolver';
-import { UpscalerControlBar } from './UpscalerControlBar';
-import { DynamicShaderEngine, ShaderUpscaler } from '../utils/shaderUpscaler';
-import { CustomSubtitleLoader, SubtitleResolver } from '../utils/subtitleResolver';
-import { LatencyTracker, ServerPingResult, ServerManager, ServerResolver, StreamServer } from '../utils/serverResolver';
-import { Upload } from 'lucide-react';
+import {  motion, AnimatePresence } from 'motion/react';
+import {  TmdbAnimatedShow, TMDB_ANIMATED_CATALOG } from '../data/tmdbData';
+import {  TmdbImage } from './TmdbImage';
+import {  getRelatedShows } from '../utils/relatedResolver';
+import {  globalCatalogIndex } from '../utils/globalCatalog';
+import {  ServerSelector } from './ServerSelector';
+import {  SeasonFetcherService, Episode } from '../services/seasonFetcherService';
+import {  createTmdbShowId, createSeasonNumber, createEpisodeNumber } from '../types/identifiers';
+import {  appEvents } from '../events/EventEmitter';
+import {  WatchProgressTracker } from '../utils/watchProgressTracker';
+import {  PlaybackStateHelper, PlaybackSettings } from '../utils/playbackStateHelper';
+import {  PlayerButtonFactory } from '../utils/playerButtonFactory';
+import {  UpscaleConfig, UpscalerResolver } from '../utils/upscalerResolver';
+import {  UpscalerControlBar } from './UpscalerControlBar';
+import {  DynamicShaderEngine, ShaderUpscaler } from '../utils/shaderUpscaler';
+import {  CustomSubtitleLoader, SubtitleResolver } from '../utils/subtitleResolver';
+import {  LatencyTracker, ServerPingResult, ServerManager, ServerResolver, StreamServer } from '../utils/serverResolver';
+import {  StreamResolver as NewStreamResolver, StreamCandidate } from '../services/resolvers/StreamResolver';
+import { PlaybackProbe, PlaybackHealth } from '../services/resolvers/PlaybackProbe';
+import { Loader2 } from 'lucide-react';
+import { AlertTriangle,  Upload } from 'lucide-react';
+import {  usePlaybackQuery } from '../hooks/usePlaybackQuery';
 
 interface WatchPageProps {
 
   show: TmdbAnimatedShow;
   initialEpisodeNumber?: number;
+  initialSeasonNumber?: number;
   onBack: () => void;
   onSelectShow: (show: TmdbAnimatedShow) => void;
   onToggleWatchlist: (showId: string) => void;
@@ -38,27 +47,42 @@ interface WatchPageProps {
 export const WatchPage: React.FC<WatchPageProps> = ({
   show,
   initialEpisodeNumber = 1,
+  initialSeasonNumber = 1,
   onBack,
   onSelectShow,
   onToggleWatchlist,
   isInWatchlist,
   onShowToast,
 }) => {
-  const [currentEpisode, setCurrentEpisode] = useState<number>(initialEpisodeNumber);
-  const [selectedSeason, setSelectedSeason] = useState<number>(1);
-  const [selectedServerId, setSelectedServerId] = useState<string>('server-1');
-  const [isServerLoading, setIsServerLoading] = useState<boolean>(false);
-
-  // Dynamic Season & Episodes Data
-  const [seasonEpisodesMap, setSeasonEpisodesMap] = useState<Record<number, Episode[]>>({});
-  const [isLoadingEpisodes, setIsLoadingEpisodes] = useState<boolean>(true);
   const [openSeasons, setOpenSeasons] = useState<Record<number, boolean>>({ 1: true });
+
+  const {
+    isLoading: isLoadingEpisodes,
+    result,
+    activeSeason: selectedSeason,
+    activeEpisode: currentEpisode,
+    activeServerId: selectedServerId,
+    changeEpisode,
+    updateProgress,
+    setActiveServerId: setSelectedServerId,
+    orchestratedMedia
+  } = usePlaybackQuery(show, initialSeasonNumber, initialEpisodeNumber);
+
+  const seasonEpisodesMap = result?.seasonEpisodesMap || {};
+  const serverLatencies = result?.serverLatencies || {};
+  const [localResumeTime, setLocalResumeTime] = useState<number | null>(null);
+  const resumeTime = localResumeTime !== null ? localResumeTime : (result?.resumeTime || 0);
+  const isMovie = result?.isMovie || (show.media_type === 'movie' || show.navType === 'Movies' || (show.durationMinutes && show.durationMinutes > 60));
+  const totalSeasons = result?.totalSeasons || show.seasonCount || (isMovie ? 1 : 2);
+  const relatedShows = result?.relatedShows || [];
+
+  const [isServerLoading, setIsServerLoading] = useState<boolean>(false);
 
   // Player & Theater state
   const [isTheaterMode, setIsTheaterMode] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [currentTime, setCurrentTime] = useState<number>(120);
+  const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(1440);
   const [volume, setVolume] = useState<number>(0.9);
   const [isMuted, setIsMuted] = useState<boolean>(false);
@@ -67,32 +91,28 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   const [qualitySetting, setQualitySetting] = useState<string>('2160p 4K UHD');
 
   // Controls & Upscaling Toggles
-  const [upscaleConfig, setUpscaleConfig] = useState<UpscaleConfig>(UpscalerResolver.PRESETS.anime_ultra);
-  const [shaderMode, setShaderMode] = useState<'off' | 'anime_super_res' | '4k_ultra_edge'>('anime_super_res');
-  const [sharpenStrength, setSharpenStrength] = useState<number>(1.0);
+  const [upscaleConfig, setUpscaleConfig] = useState<UpscaleConfig>(UpscalerResolver.PRESETS.off);
+  const [shaderMode, setShaderMode] = useState<'off' | 'anime_super_res' | '4k_ultra_edge'>('off');
+  const [sharpenStrength, setSharpenStrength] = useState<number>(0.0);
   const [subtitleLanguage, setSubtitleLanguage] = useState<string>('en-cc');
   const [customSubtitleTracks, setCustomSubtitleTracks] = useState<{ id: string; label: string; url: string }[]>([]);
-  const [serverLatencies, setServerLatencies] = useState<Record<string, ServerPingResult>>({});
   const [volumeBoost, setVolumeBoost] = useState<string>(String(initialPlaybackSettings.volumeBoost || 100));
   const [autoPlay, setAutoPlay] = useState<boolean>(initialPlaybackSettings.autoPlay);
   const [autoNext, setAutoNext] = useState<boolean>(initialPlaybackSettings.autoNext);
   const [autoSkip, setAutoSkip] = useState<boolean>(initialPlaybackSettings.autoSkip);
-  const [resumeTime, setResumeTime] = useState<number>(0);
   const [showShortcutsModal, setShowShortcutsModal] = useState<boolean>(false);
-  const [useIframeEmbed, setUseIframeEmbed] = useState<boolean>(false);
+  const [useIframeEmbed, setUseIframeEmbed] = useState<boolean>(true);
   const [showSubSettingsOverlay, setShowSubSettingsOverlay] = useState<boolean>(false);
   const [showAiGpuOverlay, setShowAiGpuOverlay] = useState<boolean>(false);
-  const [showGpuShaderDashboard, setShowGpuShaderDashboard] = useState<boolean>(true);
+  const [showGpuShaderDashboard, setShowGpuShaderDashboard] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const playerContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Ping servers for real-time latency counters on mount
+  // Sync player time to the query controller for autosaving
   useEffect(() => {
-    LatencyTracker.pingServers(show).then(results => {
-      setServerLatencies(results);
-    });
-  }, [show]);
+    updateProgress(currentTime, duration);
+  }, [currentTime, duration, updateProgress]);
 
   const togglePictureInPicture = async () => {
     try {
@@ -143,12 +163,117 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   };
 
   const displayTitle = show.title || show.name || 'Animated Show';
-  const isMovie = show.media_type === 'movie' || show.navType === 'Movies' || (show.durationMinutes && show.durationMinutes > 60);
-  const totalSeasons = show.seasonCount || (isMovie ? 1 : 2);
 
-  // Active Stream Embed URL
-  const activeStreamUrl = ServerManager.buildStreamUrl(show, selectedServerId, selectedSeason, currentEpisode);
+  // Media Orchestration State
+  const [activeStreamUrl, setActiveStreamUrl] = useState<string>('');
+  const [streamCandidate, setStreamCandidate] = useState<StreamCandidate | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [playbackHealth, setPlaybackHealth] = useState<PlaybackHealth>('idle');
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const [candidateIndex, setCandidateIndex] = useState<number>(0);
+  
+  // Create a ref to hold the current probe
+  const probeRef = useRef<PlaybackProbe | null>(null);
+
+  useEffect(() => {
+    if (!orchestratedMedia) {
+      setPlaybackHealth('resolving');
+      return;
+    }
+    
+    if (orchestratedMedia.resolution.errors.includes('CONTENT_MISMATCH')) {
+      setPlaybackHealth('blocked');
+      setPlaybackError('CONTENT_MISMATCH: The selected source does not match the requested show identity.');
+      return;
+    }
+
+    const candidates = orchestratedMedia.streamCandidates;
+    if (candidates.length === 0) {
+      setPlaybackHealth('failed');
+      setPlaybackError('No stream candidates available.');
+      return;
+    }
+    
+    // Auto-recovery flow
+    let active = true;
+    
+    const tryCandidate = async (idx: number) => {
+      if (idx >= candidates.length) {
+        if (active) {
+          setPlaybackHealth('failed');
+          setPlaybackError('All stream candidates failed.');
+        }
+        return;
+      }
+      
+      const candidate = candidates[idx];
+      setPlaybackHealth('resolving'); // Checking source
+      setActiveStreamUrl(candidate.url);
+      setStreamCandidate(candidate);
+      
+      // Verify Identity BEFORE Activation
+      try {
+          assertIdentity(
+              orchestratedMedia.resolution.identity,
+              candidate.requestedIdentity
+          );
+      } catch (e) {
+          if (e instanceof ContentIdentityMismatchError) {
+              setPlaybackError("IDENTITY_MISMATCH: The selected candidate violates the required media identity. Rejecting source.");
+              setPlaybackHealth("failed");
+              tryCandidate(idx + 1);
+              return;
+          }
+      }
+
+      const checkedCandidate = await NewStreamResolver.checkCandidate(candidate);
+      if (checkedCandidate.verificationStatus === "FAILED") {
+        if (active) {
+          tryCandidate(idx + 1);
+        }
+      } else {
+        if (active) {
+          // Initialize Probe
+          if (probeRef.current) probeRef.current.stop();
+          const probe = new PlaybackProbe((status) => {
+             if (active) setPlaybackHealth(status);
+          });
+          probeRef.current = probe;
+          
+          probe.start(candidate, () => iframeRef.current).then(result => {
+             if (!active) return;
+             if (result.status === "FAILED") {
+                 setPlaybackError(`${result.reason}: Playback failed.`);
+                 setCandidateIndex(idx + 1); // Auto-recover
+             } else if (result.status === "UNVERIFIABLE") {
+                 console.warn("Playback is unverifiable due to provider restriction.");
+                 setPlaybackError("UNVERIFIABLE: Cannot confirm playback health.");
+             } else {
+                 console.log("Playback verified with confidence:", result.confidence);
+             }
+          });
+        }
+      }
+    };
+    
+    tryCandidate(candidateIndex);
+    
+  
+
+  return () => { 
+        active = false; 
+        if (probeRef.current) probeRef.current.stop();
+    };
+  }, [orchestratedMedia, candidateIndex]);
+  
   const streamUrlWithResume = `${activeStreamUrl}${resumeTime > 0 ? `&start=${resumeTime}` : ''}`;
+
+  const currentSelectedServer = ServerManager.getServers().find(s => s.id === selectedServerId);
+  const isRunningInIframe = typeof window !== 'undefined' && window.self !== window.top;
+  const isPopoutRequired = currentSelectedServer && (
+    !currentSelectedServer.supportsEmbed ||
+    (currentSelectedServer.requiresTopLevelWindow && isRunningInIframe)
+  );
 
   // Combined WebGL / CSS Canvas Filter Style for Upscaling and Edge Reconstruction
   const combinedFilterStyle = React.useMemo(() => {
@@ -172,90 +297,6 @@ export const WatchPage: React.FC<WatchPageProps> = ({
       transform: 'translateZ(0)',
     };
   }, [upscaleConfig, shaderMode, sharpenStrength]);
-
-
-  // Restore saved watch progress if available
-  useEffect(() => {
-    if (show.id) {
-      const saved = WatchProgressTracker.getProgress(show.id);
-      if (saved) {
-        if (saved.season) setSelectedSeason(saved.season);
-        if (saved.episode) setCurrentEpisode(saved.episode);
-        if (saved.durationSeconds === 0 || saved.timestampSeconds < (saved.durationSeconds || 0) - 30) {
-          setResumeTime(saved.timestampSeconds || 0);
-        }
-      }
-    }
-  }, [show.id]);
-
-  // Continuous auto-save watch progress
-  useEffect(() => {
-    if (show.id && selectedSeason && currentEpisode) {
-      WatchProgressTracker.saveProgress(
-        show.id,
-        selectedSeason,
-        currentEpisode,
-        currentTime,
-        duration
-      );
-    }
-  }, [show.id, selectedSeason, currentEpisode, currentTime, duration]);
-
-  // Parallel server probing with 1.5s timeout threshold
-  useEffect(() => {
-    let active = true;
-    ServerResolver.resolveFastestServer(show, selectedSeason, currentEpisode, 1500).then(({ selectedServer }) => {
-      if (active && selectedServer) {
-        setSelectedServerId(selectedServer.id);
-      }
-    });
-    return () => { active = false; };
-  }, [show, selectedSeason, currentEpisode]);
-
-  // Fetch season episodes dynamically
-  useEffect(() => {
-    let isMounted = true;
-    setIsLoadingEpisodes(true);
-
-    if (isMovie) {
-      setSeasonEpisodesMap({
-        1: [{
-          id: show.tmdbId || 1,
-          number: 1,
-          seasonNumber: 1,
-          title: displayTitle,
-          overview: show.overview || 'Full Feature Presentation.',
-          stillPath: show.backdrop_path || null,
-          stillUrl: show.backdropUrl || null,
-          airDate: show.first_air_date ? show.first_air_date.substring(0, 4) : '2023',
-          voteAverage: show.vote_average || 8.8,
-          runtimeMinutes: show.durationMinutes || 120,
-        }]
-      });
-      setIsLoadingEpisodes(false);
-      return;
-    }
-
-    SeasonFetcherService.fetchAllSeasonsAndEpisodes(show).then(data => {
-      if (isMounted) {
-        setSeasonEpisodesMap(data);
-        setIsLoadingEpisodes(false);
-      }
-    });
-
-    return () => { isMounted = false; };
-  }, [show, isMovie, displayTitle]);
-
-  // Compute related shows for lower right section
-  const relatedShows = React.useMemo(() => {
-    const catalogPool = globalCatalogIndex.getAll().length > 0 ? globalCatalogIndex.getAll() : TMDB_ANIMATED_CATALOG;
-    const items = getRelatedShows(show, catalogPool);
-    if (items.length < 4) {
-      const fillers = catalogPool.filter(s => s.id !== show.id && !items.some(i => i.id === s.id)).slice(0, 6 - items.length);
-      return [...items, ...fillers];
-    }
-    return items.slice(0, 6);
-  }, [show]);
 
   // Keyboard Shortcuts Handler
   useEffect(() => {
@@ -312,31 +353,42 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   const handleNextEpisode = () => {
     const currentList = seasonEpisodesMap[selectedSeason] || [];
     if (currentEpisode < currentList.length) {
-      setCurrentEpisode(currentEpisode + 1);
+      changeEpisode(selectedSeason, currentEpisode + 1);
       onShowToast(`Switched to Episode ${currentEpisode + 1}`);
     } else if (selectedSeason < totalSeasons) {
-      setSelectedSeason(selectedSeason + 1);
-      setCurrentEpisode(1);
+      changeEpisode(selectedSeason + 1, 1);
       onShowToast(`Switched to Season ${selectedSeason + 1} • Episode 1`);
     }
   };
 
   const handlePrevEpisode = () => {
     if (currentEpisode > 1) {
-      setCurrentEpisode(currentEpisode - 1);
+      changeEpisode(selectedSeason, currentEpisode - 1);
       onShowToast(`Switched to Episode ${currentEpisode - 1}`);
     }
   };
 
   const handleServerChange = (serverId: string) => {
-    setIsServerLoading(true);
     setSelectedServerId(serverId);
+    let newUrl = '';
+    if (orchestratedMedia) {
+      const candidate = orchestratedMedia.streamCandidates.find(c => c.sourceProvider === serverId);
+      if (candidate) {
+        newUrl = candidate.url;
+        setStreamCandidate(candidate);
+      }
+    }
+    if (!newUrl) {
+      newUrl = ServerManager.buildStreamUrl(show, serverId, selectedSeason, currentEpisode);
+    }
+    setActiveStreamUrl(newUrl);
+    setIsServerLoading(true);
     const srv = ServerManager.getServers().find(s => s.id === serverId);
     onShowToast(`Switching stream to ${srv?.name || 'Server'}...`);
     setTimeout(() => {
       setIsServerLoading(false);
       onShowToast(`Connected to ${srv?.name}!`);
-    }, 500);
+    }, 400);
   };
 
   const toggleFullscreen = () => {
@@ -359,6 +411,9 @@ export const WatchPage: React.FC<WatchPageProps> = ({
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
+
+
+  const isResolving = isLoadingEpisodes;
 
   return (
     <div className="min-h-screen bg-[#03090d] text-white flex flex-col font-sans selection:bg-[#14b8a6] selection:text-black">
@@ -406,6 +461,12 @@ export const WatchPage: React.FC<WatchPageProps> = ({
         </div>
       </header>
 
+      <DiagnosticPanel 
+        orchestratedMedia={orchestratedMedia} 
+        activeCandidate={orchestratedMedia?.streamCandidates[candidateIndex] || null} 
+        playbackHealth={playbackHealth}
+        iframeRef={iframeRef}
+      />
       {/* 2. MAIN WATCH PAGE GRID LAYOUT */}
       <main className="flex-1 max-w-[1920px] w-full mx-auto px-3 sm:px-6 py-4 space-y-6">
         
@@ -425,166 +486,105 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                 type="poster"
                 title={displayTitle}
                 name={show.name}
-                genres={show.genres}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover"
               />
-
-              <div className="absolute top-2.5 left-2.5 z-10">
-                <span className="px-2 py-0.5 rounded-lg bg-[#14b8a6] text-black font-black text-[10px] border border-black shadow-[1px_1px_0px_#000000]">
-                  4K SAKUGA
-                </span>
-              </div>
-
-              <div className="absolute top-2.5 right-2.5 z-10">
-                <span className="px-2 py-0.5 rounded-lg bg-[#facc15] text-black font-black text-[10px] border border-black shadow-[1px_1px_0px_#000000]">
-                  ★ {show.vote_average || 8.8}
-                </span>
-              </div>
             </div>
-
-            {/* Small Overview Card */}
-            <div className="p-4 rounded-2xl bg-[#07151e] border-2 border-black shadow-[4px_4px_0px_#000000] space-y-3">
-              <div>
-                <span className="px-2 py-0.5 rounded bg-[#0d2836] text-[#00f2fe] font-black text-[10px] uppercase border border-black">
-                  {isMovie ? 'Movie Feature' : 'TV Series'}
-                </span>
-                <h1 className="text-base font-black text-white mt-1 leading-snug">
-                  {displayTitle}
-                </h1>
-                {show.studio && (
-                  <p className="text-xs font-bold text-[#14b8a6]">
-                    Studio: {show.studio}
-                  </p>
-                )}
-              </div>
-
-              {/* Genres */}
-              <div className="flex flex-wrap gap-1">
-                {(show.genres || ['Animation', 'Action', 'Adventure']).map((g, i) => (
-                  <span key={i} className="px-2 py-0.5 rounded-lg bg-[#0d2836] text-[10px] font-bold text-gray-300 border border-black">
-                    {g}
-                  </span>
-                ))}
-              </div>
-
-              {/* Small Synopsis */}
-              <div className="pt-2 border-t border-gray-800 space-y-1">
-                <h4 className="text-[11px] font-black uppercase text-[#00f2fe]">Overview</h4>
-                <p className="text-xs text-gray-300 leading-relaxed line-clamp-4">
-                  {show.overview || 'An extraordinary animated masterpiece with dynamic Sakuga keyframe animation, rich world-building, and high fidelity audio.'}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between text-[11px] font-bold text-gray-400 pt-1">
-                <span>Match: <strong className="text-[#14b8a6]">{show.matchScore || 98}%</strong></span>
-                <span>Year: <strong className="text-white">{show.first_air_date ? show.first_air_date.substring(0, 4) : '2023'}</strong></span>
-              </div>
-
-              {/* Live Server Latency Counters under Overview Box */}
-              {Object.keys(serverLatencies).length > 0 && (
-                <div className="pt-2.5 border-t border-gray-800 space-y-1.5">
-                  <span className="text-[10px] font-black text-[#14b8a6] uppercase tracking-wider flex items-center gap-1">
-                    <Radio className="w-3.5 h-3.5 text-[#14b8a6] animate-pulse" /> Live Latency
-                  </span>
-                  <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                    {ServerManager.getServers().map((srv) => {
-                      const lat = serverLatencies[srv.id];
-                      const ping = lat ? lat.pingMs : null;
-                      return (
-                        <div key={srv.id} className="flex items-center justify-between bg-[#03090d] px-2 py-1 rounded-lg border border-black/80">
-                          <span className="font-bold text-gray-300 truncate">{srv.name.split(' ')[0]}:</span>
-                          <span className={`font-mono font-bold ${ping && ping < 300 ? 'text-[#86efac]' : ping ? 'text-amber-400' : 'text-red-400'}`}>
-                            {ping ? `${ping}ms` : '...'}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+            
+            <div className="hidden lg:block text-sm text-[#99f6e4] leading-relaxed">
+              <p className="line-clamp-4">{show.overview}</p>
             </div>
           </div>
-
+          
           {/* ======================================================================= */}
-          {/* CENTER COLUMN (WIDER & BIGGER): Video Player, Controls, Servers           */}
+          {/* RIGHT SIDE: Video Player & Sub-Controls                                */}
           {/* ======================================================================= */}
-          <div className={`${isTheaterMode ? 'lg:col-span-10 xl:col-span-10' : 'lg:col-span-7 xl:col-span-8'} space-y-4 transition-all duration-300`}>
+          <div className={`${isTheaterMode ? 'lg:col-span-10 xl:col-span-10' : 'lg:col-span-7 xl:col-span-7'} space-y-4`}>
             
-            {/* INTEGRATED MEDIA PLAYER STAGE CONTAINER */}
-            <div className="space-y-3 p-2 bg-[#07151e] rounded-2xl border-2 border-black shadow-[6px_6px_0px_#000000]">
-
-              {/* WIDER & LARGER VIDEO PLAYER SCREEN */}
+            <div className="rounded-2xl bg-[#07151e] border-2 border-black shadow-[6px_6px_0px_#000000] overflow-hidden p-1.5 sm:p-2">
               <div 
-                ref={playerContainerRef}
-                style={combinedFilterStyle}
-                className={`relative w-full rounded-2xl overflow-hidden bg-black border-[3px] border-black shadow-[4px_4px_0px_#000000] group gpu-accelerated transition-all duration-300 ${
-                  isTheaterMode 
-                    ? 'aspect-[21/9] min-h-[520px] sm:min-h-[620px] md:min-h-[740px] lg:min-h-[820px]' 
-                    : 'aspect-video min-h-[440px] sm:min-h-[540px] md:min-h-[640px] lg:min-h-[740px]'
-                }`}
+                className={`relative w-full bg-black rounded-xl overflow-hidden shadow-inner ${isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'aspect-video'}`}
+                style={{ ...combinedFilterStyle }}
               >
-                {/* In-Player HUD Badge Overlay for AI Upscaler & Shader */}
-                <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 opacity-90 hover:opacity-100 transition-opacity bg-black/75 backdrop-blur-md p-1.5 rounded-xl border border-white/20 shadow-md">
-                  <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-[#00f2fe]/20 border border-[#00f2fe]/40 text-[#00f2fe] text-[10px] font-black uppercase">
-                    <Sparkles className="w-3 h-3 animate-pulse" />
-                    <span>AI GPU: {upscaleConfig.mode.replace('_', ' ')}</span>
-                  </div>
+                {isPopoutRequired ? (
+                  <div className="w-full h-full bg-[#051119] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#00f2fe]/10 via-transparent to-black pointer-events-none" />
+                    <div className="relative z-10 max-w-md space-y-4">
+                      <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-[#14b8a6] to-[#00f2fe] border-2 border-black shadow-[4px_4px_0px_#000000] flex items-center justify-center text-black">
+                        <ExternalLink className="w-7 h-7" />
+                      </div>
+                      <div>
+                        <h3 className="text-base sm:text-lg font-black text-white">
+                          {currentSelectedServer?.name || 'Selected Server'}
+                        </h3>
+                        <p className="text-xs text-[#99f6e4] font-bold mt-1 uppercase tracking-wider">
+                          Top-Level Window Required
+                        </p>
+                        <p className="text-xs text-gray-300 mt-2 leading-relaxed">
+                          This provider enforces anti-framing security policies when loaded inside embedded preview frames. Launch the stream in a clean top-level tab or switch to an embed-compatible server below.
+                        </p>
+                      </div>
 
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => {
-                        const presets = Object.values(UpscalerResolver.PRESETS);
-                        const currIdx = presets.findIndex(p => p.mode === upscaleConfig.mode);
-                        const next = presets[(currIdx + 1) % presets.length];
-                        setUpscaleConfig(next);
-                        onShowToast(`GPU AI Upscaler: ${next.mode.toUpperCase()}`);
-                      }}
-                      className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-[#00f2fe] hover:text-black text-white text-[10px] font-bold border border-white/20 transition-all cursor-pointer"
-                      title="Cycle AI GPU Upscaler Profile"
-                    >
-                      Preset ⚡
-                    </button>
-                    <button
-                      onClick={() => {
-                        const modes: ('anime_super_res' | '4k_ultra_edge' | 'off')[] = ['anime_super_res', '4k_ultra_edge', 'off'];
-                        const nextMode = modes[(modes.indexOf(shaderMode) + 1) % modes.length];
-                        setShaderMode(nextMode);
-                        onShowToast(`WebGL Shader: ${nextMode.toUpperCase()}`);
-                      }}
-                      className="px-2 py-0.5 rounded-md bg-white/10 hover:bg-[#14b8a6] hover:text-black text-white text-[10px] font-bold border border-white/20 transition-all cursor-pointer"
-                      title="Cycle WebGL Shader Mode"
-                    >
-                      Shader
-                    </button>
+                      <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2">
+                        <button
+                          onClick={() => window.open(activeStreamUrl || streamUrlWithResume, '_blank')}
+                          className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#00f2fe] to-[#14b8a6] text-black font-black text-xs hover:brightness-110 transition-all cursor-pointer border-2 border-black shadow-[3px_3px_0px_#000000] flex items-center justify-center gap-2"
+                        >
+                          <span>Launch Stream in New Tab</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleServerChange(ServerManager.getDefaultServer().id)}
+                          className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#0d2836] text-white hover:bg-[#14b8a6]/20 font-black text-xs transition-all cursor-pointer border-2 border-black shadow-[2px_2px_0px_#000000] flex items-center justify-center gap-1.5"
+                        >
+                          <Zap className="w-3.5 h-3.5 text-[#00f2fe]" />
+                          <span>Switch to Embedded Server ({ServerManager.getDefaultServer().name})</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-
-                {useIframeEmbed ? (
-                  /* Embed iFrame Stream */
-                  <iframe
-                    src={streamUrlWithResume}
-                    className="w-full h-full border-none"
-                    referrerPolicy="no-referrer"
-                    allowFullScreen
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
-                    allow="autoplay *; encrypted-media *; picture-in-picture; accelerometer; gyroscope; display-capture"
-                    title={`Streaming Instant 4K ${displayTitle}`}
-                  />
+                ) : useIframeEmbed ? (
+                  <div className="w-full h-full bg-black relative">
+                    {/* Embed iFrame Stream */}
+                    {activeStreamUrl && playbackHealth !== 'blocked' && (
+                      <iframe
+                        ref={iframeRef}
+                        src={streamUrlWithResume}
+                        className="w-full h-full border-none"
+                        referrerPolicy="no-referrer"
+                        allowFullScreen
+                        allow="autoplay; fullscreen; encrypted-media; picture-in-picture; accelerometer; gyroscope"
+                        title={`Streaming ${displayTitle}`}
+                      />
+                    )}
+                    {/* Top Popout Overlay Bar */}
+                    <div className="absolute top-2 right-2 z-30">
+                      <button
+                        onClick={() => window.open(activeStreamUrl || streamUrlWithResume, '_blank')}
+                        className="px-2.5 py-1 rounded-lg bg-[#00f2fe] text-black font-black text-[10px] hover:bg-[#14b8a6] transition-all cursor-pointer shadow-[2px_2px_0px_#000000] flex items-center gap-1"
+                        title="Open stream in clean tab to bypass preview iframe sandbox restrictions"
+                      >
+                        <span>Popout Player</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
                 ) : (
                   /* Interactive HTML5 Player Screen */
                   <div className="relative w-full h-full bg-[#03090d] flex items-center justify-center overflow-hidden">
-                    
-                    {/* Backdrop Background */}
-                    <TmdbImage 
-                      item={show}
-                      backdropPath={show.backdropUrl || show.backdrop_path}
-                      posterPath={show.posterUrl || show.poster_path}
-                      type="backdrop"
-                      title={displayTitle}
-                      className={`w-full h-full object-cover transition-all duration-500 ${
-                        isPlaying ? 'scale-105 opacity-85 brightness-95' : 'scale-100 opacity-60 filter blur-xs'
-                      }`}
-                    />
+                    {/* Embedded Iframe as HTML5 Player Fallback */}
+                    {activeStreamUrl && playbackHealth !== 'blocked' && (
+                      <iframe
+                        ref={iframeRef}
+                        src={streamUrlWithResume}
+                        className="absolute inset-0 w-full h-full border-none z-10"
+                        referrerPolicy="no-referrer"
+                        allowFullScreen
+                        allow="autoplay; fullscreen; encrypted-media; picture-in-picture; accelerometer; gyroscope"
+                        title={`Streaming ${displayTitle}`}
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none z-20" />
+
 
                     {/* Dark Vignette */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 pointer-events-none" />
@@ -626,6 +626,14 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                           {displayTitle} {isMovie ? '' : `• Season ${selectedSeason} Ep ${currentEpisode}`}
                         </span>
                       </div>
+                      <button
+                        onClick={() => window.open(activeStreamUrl || streamUrlWithResume, '_blank')}
+                        className="px-2.5 py-1 rounded-lg bg-[#00f2fe] text-black text-[10px] font-black hover:bg-[#14b8a6] transition-all cursor-pointer shadow-[1px_1px_0px_#000000] flex items-center gap-1"
+                        title="Open stream in clean tab to bypass preview iframe sandbox restrictions"
+                      >
+                        <span>Popout Player</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
                     </div>
 
                     {/* Floating Settings Menu Overlay Popup inside the Player Screen */}
@@ -1031,7 +1039,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                 <span>▶ Resuming S{selectedSeason} E{currentEpisode} at {formatTime(resumeTime)}</span>
                 <button 
                   onClick={() => {
-                    setResumeTime(0);
+                    setLocalResumeTime(0);
                     onShowToast(`Started Season ${selectedSeason} Ep ${currentEpisode} from beginning!`);
                   }}
                   className="px-2 py-0.5 rounded-lg bg-[#00f2fe] hover:bg-white text-black font-bold text-[10px] uppercase border border-black transition-all cursor-pointer"
@@ -1153,6 +1161,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               <ServerSelector
                 activeServerId={selectedServerId}
                 onSelectServer={handleServerChange}
+                activeStreamUrl={activeStreamUrl || streamUrlWithResume}
               />
             </div>
           </div>
@@ -1160,7 +1169,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
           {/* ======================================================================= */}
           {/* RIGHT SIDE: SEASONS & EPISODES + LOWER RIGHT RELATED STUFF              */}
           {/* ======================================================================= */}
-          <div className={`${isTheaterMode ? 'lg:col-span-12' : 'lg:col-span-3 xl:col-span-2'} space-y-6`}>
+          <div className={`${isTheaterMode ? 'lg:col-span-12' : 'lg:col-span-3 xl:col-span-3'} space-y-6`}>
             
             {/* SEASONS AND EPISODES SECTION ON THE RIGHT */}
             <div className="p-4 rounded-2xl bg-[#07151e] border-2 border-black shadow-[4px_4px_0px_#000000] space-y-3">
@@ -1213,8 +1222,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                                 <div
                                   key={ep.id}
                                   onClick={() => {
-                                    setSelectedSeason(sNum);
-                                    setCurrentEpisode(ep.number);
+                                    changeEpisode(sNum, ep.number);
                                     onShowToast(`Playing Season ${sNum} Ep ${ep.number}: ${ep.title}`);
                                   }}
                                   className={`p-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-2 group ${
@@ -1279,8 +1287,8 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               <div className="grid grid-cols-2 gap-2.5">
                 {relatedShows.map((relShow, index) => {
                   const relTitle = relShow.title || relShow.name || 'Toon';
-                  return (
-                    <div
+                
+                    return ( <div
                       key={`watch-rel-${relShow.id}-${index}`}
                       onClick={() => {
                         onSelectShow(relShow);

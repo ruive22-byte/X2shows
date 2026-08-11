@@ -344,11 +344,7 @@ export function getOmdbApiKey(): string {
     const saved = localStorage.getItem(CACHE_KEYS.OMDB_KEY);
     if (saved && saved.trim()) return saved.trim();
   }
-
-  const metaEnv = (import.meta as any)?.env?.VITE_OMDB_API_KEY;
-  const procEnv = typeof process !== 'undefined' ? process.env?.OMDB_API_KEY : '';
-  const envKey = metaEnv || procEnv || '';
-  return (typeof envKey === 'string' ? envKey.trim() : '');
+  return '';
 }
 
 /**
@@ -398,7 +394,7 @@ export function getTmdbBackdropUrl(backdropPath?: string | null): string | null 
 /**
  * Secondary Tier: TVmaze Open API Search (Free, no API key required)
  */
-export async function searchTvMazeShow(title: string): Promise<TvMazeShow | null> {
+export async function searchTvMazeShow(title: string, tmdbId: number): Promise<TvMazeShow | null> {
   if (!title || !title.trim()) return null;
   const normTitle = title.toLowerCase().trim();
 
@@ -501,7 +497,7 @@ export async function searchOmdbShow(
       .trim();
 
     const response = await fetch(
-      `https://www.omdbapi.com/?apikey=${encodeURIComponent(apiKey)}&t=${encodeURIComponent(cleanTitle)}`,
+      `/api/omdb/proxy?t=${encodeURIComponent(cleanTitle)}`,
       { signal: controller.signal }
     );
     clearTimeout(timeoutId);
@@ -529,10 +525,11 @@ export async function searchOmdbShow(
  */
 export async function resolveShowArtwork(
   title: string,
+  tmdbId: number,
   tmdbPosterPath?: string | null,
   tmdbBackdropPath?: string | null
 ): Promise<ResolvedShowArtwork> {
-  const normKey = title.toLowerCase().trim();
+  const normKey = `tmdb-${tmdbId}`;
 
   // 1. Check in-memory / localStorage cache first for successful fallbacks
   if (memoryImageCache.has(normKey)) {
@@ -580,7 +577,7 @@ export async function resolveShowArtwork(
   }
 
   // 4. Secondary Tier: TVmaze Open API (Free, open public source)
-  const tvmazeShow = await searchTvMazeShow(title);
+  const tvmazeShow = await searchTvMazeShow(title, tmdbId);
   if (tvmazeShow && tvmazeShow.image) {
     const posterUrl = tvmazeShow.image.original || tvmazeShow.image.medium || null;
     const backdropUrl = tvmazeShow.image.original || posterUrl;
@@ -639,13 +636,13 @@ export async function getNextFallbackArtwork(
   tmdbId?: number | null,
   imdbId?: string | null
 ): Promise<{ url: string | null; source: 'tmdb' | 'tvmaze' | 'omdb' | 'placeholder' } | null> {
-  const normKey = title.toLowerCase().trim();
+  const normKey = `tmdb-${tmdbId}`;
 
   // If we have an IMDb ID and we haven't tried OMDb yet
   if (imdbId && ((!failedSource || failedSource === 'tmdb' || failedSource === 'registry' || failedSource === 'primary'))) {
     try {
        // OMDb by IMDb ID
-       const res = await fetch(`https://www.omdbapi.com/?apikey=7b64a2b9&i=${imdbId}`);
+       const res = await fetch(`/api/omdb/proxy?i=${imdbId}`);
        if (res.ok) {
            const omdbData = await res.json();
            if (omdbData && omdbData.Poster && omdbData.Poster !== 'N/A' && (!failedUrl || omdbData.Poster !== failedUrl)) {
@@ -685,7 +682,7 @@ export async function getNextFallbackArtwork(
 
   // Title search fallback - TVmaze
   if ((!failedSource || failedSource === 'tmdb' || failedSource === 'registry' || failedSource === 'primary')) {
-    const tvmazeShow = await searchTvMazeShow(title);
+    const tvmazeShow = await searchTvMazeShow(title, tmdbId);
     if (tvmazeShow && tvmazeShow.image) {
       const tvmazeUrl = tvmazeShow.image.original || tvmazeShow.image.medium;
       if (tvmazeUrl && (!failedUrl || tvmazeUrl !== failedUrl)) {
@@ -725,9 +722,10 @@ export async function getNextFallbackArtwork(
  */
 export async function fetchTvMazeEpisodes(
   showTitle: string,
+  tmdbId: number,
   tvmazeId?: number
 ): Promise<Episode[]> {
-  const normKey = showTitle.toLowerCase().trim();
+  const normKey = `tmdb-${tmdbId}`;
 
   // 1. Check in-memory / localStorage cache
   if (memoryEpisodeCache.has(normKey)) {
@@ -738,7 +736,7 @@ export async function fetchTvMazeEpisodes(
   let targetId = tvmazeId;
 
   if (!targetId) {
-    const show = await searchTvMazeShow(showTitle);
+    const show = await searchTvMazeShow(showTitle, tmdbId);
     if (show && show.id) {
       targetId = show.id;
     }
@@ -791,11 +789,11 @@ export async function fetchTvMazeEpisodes(
 /**
  * Pre-warm the cache with catalog shows
  */
-export async function preWarmCatalogCache(titles: string[]): Promise<number> {
+export async function preWarmCatalogCache(shows: { title: string, tmdbId: number }[]): Promise<number> {
   let loadedCount = 0;
-  const promises = titles.map(async (t) => {
+  const promises = shows.map(async (s) => {
     try {
-      const art = await resolveShowArtwork(t);
+      const art = await resolveShowArtwork(s.title, s.tmdbId);
       if (art.posterUrl || art.backdropUrl) {
         loadedCount++;
       }

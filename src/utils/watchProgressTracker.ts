@@ -1,3 +1,5 @@
+import { appEvents } from '../events/EventEmitter';
+
 export interface WatchProgress {
   showId: number | string;
   season: number;
@@ -9,6 +11,22 @@ export interface WatchProgress {
 
 export class WatchProgressTracker {
   private static STORAGE_PREFIX = 'fakeflix_watch_progress_';
+
+  public static initializeListeners() {
+    appEvents.on('EpisodeProgressUpdated', (payload) => {
+      this.saveProgress(
+        payload.showId,
+        payload.seasonNumber,
+        payload.episodeNumber,
+        payload.currentTime,
+        payload.duration
+      );
+    });
+
+    appEvents.on('EpisodeCompleted', (payload) => {
+      this.clearProgress(payload.showId);
+    });
+  }
 
   /**
    * Saves or updates the current viewing state for a specific show

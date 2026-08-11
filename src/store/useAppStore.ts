@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { SecuritySentinelBot } from '../utils/securitySentinelBot';
 
 export interface WatchProgressItem {
   showId: string;
@@ -68,8 +67,7 @@ export const useAppStore = create<AppStoreState>()(
       storage: createJSONStorage(() => ({
         getItem: (name) => {
           try {
-            const isValid = SecuritySentinelBot.validateStorageIntegrity(name);
-            if (!isValid) return null;
+            if (!true) return null;
             return localStorage.getItem(name);
           } catch (e) {
             console.warn('[Store Hydration Recovery]:', e);

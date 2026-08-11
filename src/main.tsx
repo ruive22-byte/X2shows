@@ -1,3 +1,4 @@
+import { ErrorBoundary } from './components/ErrorBoundary';
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
@@ -14,6 +15,6 @@ if ('serviceWorker' in navigator && (import.meta as any).env?.PROD) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary fallbackTitle="Application Error"><App /></ErrorBoundary>
   </StrictMode>,
 );

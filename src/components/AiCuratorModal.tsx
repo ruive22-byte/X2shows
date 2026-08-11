@@ -79,11 +79,15 @@ export const AiCuratorModal: React.FC<AiCuratorModalProps> = ({
         setRecommendationResult(data);
       } else {
         // Fallback local intelligent match if server is offline
-        const matched = shows.find(s => 
-          selectedMood === 'adrenaline' ? s.id === 'cyberpunk-edgerunners' || s.id === 'arcane' :
-          selectedMood === 'dark-gothic' ? s.id === 'demon-slayer' || s.id === 'castlevania-nocturne' :
-          selectedMood === 'whimsical-tears' ? s.id === 'frieren' : s.id === 'arcane'
-        ) || shows[0];
+        const matched = shows.find(s => {
+          const genres = (s.genres || []).map(g => g.toLowerCase());
+          const style = (s.animationStyle || '').toLowerCase();
+          
+          if (selectedMood === 'adrenaline') return genres.includes('action') || genres.includes('sci-fi') || style.includes('cyberpunk');
+          if (selectedMood === 'dark-gothic') return genres.includes('horror') || genres.includes('dark fantasy') || genres.includes('vampire');
+          if (selectedMood === 'whimsical-tears') return genres.includes('drama') || genres.includes('fantasy');
+          return false;
+        }) || shows[0];
 
         setRecommendationResult({
           recommendedShowId: matched.id,

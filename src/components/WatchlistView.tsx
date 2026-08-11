@@ -1204,11 +1204,15 @@ export const WatchlistView: React.FC<WatchlistViewProps> = ({
                   </div>
 
                   {/* Progress Bar at Bottom of Thumbnail */}
-                  <div className="absolute bottom-0 left-0 right-0 h-2 bg-black/60 overflow-hidden">
+                  <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/80 backdrop-blur-sm overflow-hidden group-hover:h-2 transition-all duration-300">
                     <div
-                      className="h-full bg-gradient-to-r from-[#14b8a6] via-[#00f2fe] to-[#38bdf8] transition-all duration-300"
+                      className="h-full bg-gradient-to-r from-[#14b8a6] via-[#00f2fe] to-[#38bdf8] transition-all duration-700 ease-out relative"
                       style={{ width: `${item.progressPercent}%` }}
-                    />
+                    >
+                      <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                      <div className="absolute right-0 top-0 bottom-0 w-4 bg-white/80 blur-[3px]" />
+                      <div className="absolute right-0 top-0 bottom-0 w-1 bg-white" />
+                    </div>
                   </div>
                 </div>
 

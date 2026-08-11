@@ -6,16 +6,16 @@ import { ContinueWatchingRow } from './components/ContinueWatchingRow';
 import { SkeletonRow } from './components/SkeletonRow';
 import { SkeletonCard } from './components/SkeletonCard';
 import { SkeletonDrawerModal } from './components/SkeletonDrawerModal';
-import { WatchlistView } from './components/WatchlistView';
-import { ShowDetailPage } from './components/ShowDetailPage';
-import { WatchPage } from './components/WatchPage';
+
+
+
 import { ShellControlsFloating } from './components/ShellControlsFloating';
 import { ToastNotification } from './components/ToastNotification';
 import { SplashScreen } from './components/SplashScreen';
-import { DualApiStatusModal } from './components/DualApiStatusModal';
+
 import { MovableVerticalTaskbar } from './components/MovableVerticalTaskbar';
 import { GlobalShaderProvider } from './components/GlobalShaderProvider';
-import { SearchResultsFilterView } from './components/SearchResultsFilterView';
+
 import { useAntiInspect } from './hooks/useAntiInspect';
 import { initAntiDebuggerTrap } from './utils/antiDebug';
 import { INITIAL_SECTIONS, transformTmdbShowToSkeletonCard } from './data/skeletonData';
@@ -38,64 +38,33 @@ import {
 } from './types';
 import { Sparkles, Layers, Grid, SlidersHorizontal, RefreshCw, Smile, Zap, Loader2, ArrowDown, Search, X } from 'lucide-react';
 import { AutoErrorCatcher } from './components/AutoErrorCatcher';
-import { AiAgentMatrixModal } from './components/AiAgentMatrixModal';
-import { CyberBugSwarm } from './components/CyberBugSwarm';
-import { MascotCurator } from './components/MascotCurator';
+
+
+
 import { useAutoHealthCheck } from './hooks/useAutoHealthCheck';
 import { GeminiBugReporter } from './utils/geminiBugReporter';
-import { SecuritySentinelBot } from './utils/securitySentinelBot';
 import { PerformanceWarden } from './utils/performanceWarden';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './firebase';
-import Auth from './components/Auth';
+import { useAuthVerifier } from './hooks/useAuthVerifier';
 
-const DeveloperDiagnosticsPanel = React.lazy(() =>
-  import('./components/developer/DeveloperDiagnosticsPanel').then((m) => ({ default: m.DeveloperDiagnosticsPanel }))
-);
+const Auth = React.lazy(() => import('./components/Auth'));
+
+const WatchlistView = React.lazy(() => import('./components/WatchlistView').then(m => ({ default: m.WatchlistView })));
+const ShowDetailPage = React.lazy(() => import('./components/ShowDetailPage').then(m => ({ default: m.ShowDetailPage })));
+const WatchPage = React.lazy(() => import('./components/WatchPage').then(m => ({ default: m.WatchPage })));
+const DualApiStatusModal = React.lazy(() => import('./components/DualApiStatusModal').then(m => ({ default: m.DualApiStatusModal })));
+const SearchResultsFilterView = React.lazy(() => import('./components/SearchResultsFilterView').then(m => ({ default: m.SearchResultsFilterView })));
+
+
+
 
 export default function App() {
 
-  const [user, setUser] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState<boolean>(true);
-
+  const { snapshot, transition: authTransition } = useAuthVerifier();
+  const { state: authState, user } = snapshot;
+  const authLoading = authState === 'booting' || authState === 'checking' || authState === 'hydrating';
+  
   useEffect(() => {
     localStorage.removeItem('x2shows_guest_user');
-    
-    // Check server session via API
-    const verifySession = async () => {
-      try {
-        const storedToken = localStorage.getItem('x2shows_session_token');
-        const headers: Record<string, string> = {};
-        if (storedToken) {
-          headers['Authorization'] = `Bearer ${storedToken}`;
-        }
-
-        const res = await fetch('/api/session', {
-          credentials: 'include',
-          headers
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.authenticated) {
-            setUser(data.user || { email: 'syle@x2shows.local', uid: 'server-authenticated-user' });
-            setAuthLoading(false);
-            return;
-          }
-        }
-      } catch {}
-
-      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser || { email: 'sylenul@x2shows.local', uid: 'sylenul-authenticated-user' });
-        setAuthLoading(false);
-      }, (error) => {
-        console.warn('Firebase auth state error:', error);
-        setUser({ email: 'sylenul@x2shows.local', uid: 'sylenul-authenticated-user' });
-        setAuthLoading(false);
-      });
-      return () => unsubscribe();
-    };
-
-    verifySession();
   }, []);
 
   // Activate Anti-Inspect protection & Anti-Debugger trap
@@ -107,7 +76,6 @@ export default function App() {
 
     const cleanup = initAntiDebuggerTrap(false); // set to false by default or true for anti-debug
     // Starts destroying ads/trackers the second the app loads
-    SecuritySentinelBot.startDomDefender();
     return () => cleanup();
   }, []);
 
@@ -120,42 +88,26 @@ export default function App() {
   const [selectedCard, setSelectedCard] = useState<SkeletonCardItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isDualApiModalOpen, setIsDualApiModalOpen] = useState<boolean>(false);
-  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState<boolean>(false);
 
   // Keyboard shortcut Ctrl+Shift+D to open Developer Diagnostics Panel
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
         e.preventDefault();
-        setIsDiagnosticsOpen((prev) => !prev);
+        /*setIsDiagnosticsOpen*/((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // AI & Autonomy States
-  const [isBugsVisible, setIsBugsVisible] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('x2_bugs_visible') !== 'false';
-    } catch {
-      return true;
-    }
-  });
-  const [isMascotVisible, setIsMascotVisible] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('x2_mascot_visible') !== 'false';
-    } catch {
-      return true;
-    }
-  });
-  const [isMatrixOpen, setIsMatrixOpen] = useState<boolean>(false);
+
 
   // Dedicated Show Detail Page State (Replaces popup modal when selecting a show)
   const [activeDetailShow, setActiveDetailShow] = useState<TmdbAnimatedShow | null>(null);
 
   // Dedicated Watch Page State (Third/Final Page layout for streaming)
-  const [activeWatchShow, setActiveWatchShow] = useState<{ show: TmdbAnimatedShow; episodeNumber?: number } | null>(null);
+  const [activeWatchShow, setActiveWatchShow] = useState<{ show: TmdbAnimatedShow; episodeNumber?: number; seasonNumber?: number } | null>(null);
 
   
   // HYDRATE CATALOG ON MOUNT
@@ -295,7 +247,7 @@ export default function App() {
   }, []);
 
   const handleToggleBugs = useCallback(() => {
-    setIsBugsVisible((prev) => {
+    /*setIsBugsVisible*/((prev) => {
       const next = !prev;
       try {
         localStorage.setItem('x2_bugs_visible', String(next));
@@ -306,7 +258,7 @@ export default function App() {
   }, [showToast]);
 
   const handleToggleMascot = useCallback(() => {
-    setIsMascotVisible((prev) => {
+    /*setIsMascotVisible*/((prev) => {
       const next = !prev;
       try {
         localStorage.setItem('x2_mascot_visible', String(next));
@@ -317,7 +269,7 @@ export default function App() {
   }, [showToast]);
 
   const handleToggleMatrix = useCallback(() => {
-    setIsMatrixOpen((prev) => !prev);
+    /*setIsMatrixOpen*/((prev) => !prev);
   }, []);
 
   /**
@@ -534,7 +486,7 @@ export default function App() {
       catalogRegistry.getAll().find(s => s.id === showId || s.title === (card as any).title) ||
       (card as TmdbAnimatedShow);
 
-    setActiveWatchShow({ show: matchedShow, episodeNumber: episodeNumber || 1 });
+    setActiveWatchShow({ show: matchedShow, episodeNumber: episodeNumber, seasonNumber: (card as any).season });
 
     const existingIndex = continueWatching.findIndex(cw => cw.showId === card.id || cw.id === card.id);
     if (existingIndex >= 0) {
@@ -572,7 +524,7 @@ export default function App() {
     const matched = dynamicCatalog.find(s => s.id === show.showId || s.id === show.id) || 
       TMDB_ANIMATED_CATALOG.find(s => s.id === show.showId || s.id === show.id) || 
       catalogRegistry.getAll()[0];
-    handleRegisterPlayCard(matched, show.currentEpisode);
+    handleRegisterPlayCard({ ...matched, season: show.season } as any, show.currentEpisode);
   }, [dynamicCatalog, handleRegisterPlayCard]);
 
   const handleAdvanceContinueWatchingEpisode = useCallback((showId: string) => {
@@ -848,7 +800,7 @@ export default function App() {
     }
 
     if (activeNav === 'Newly Added') {
-      const newlyAddedAll = CatalogSorter.getNewlyAddedSection(dynamicCatalog, 100);
+      const newlyAddedAll = CatalogSorter.getNewlyAddedSection(dynamicCatalog, 1000);
 
       sections = [
         {
@@ -1021,7 +973,7 @@ export default function App() {
     if (activeNav === 'Anime') return animeCatalog;
     if (activeNav === 'Toons') return toonsCatalog;
     if (activeNav === 'Trending') return trendingCatalog;
-    if (activeNav === 'Newly Added') return [...dynamicCatalog].reverse();
+    if (activeNav === 'Newly Added') return CatalogSorter.getNewlyAddedSection(dynamicCatalog, 1000) as TmdbAnimatedShow[];
     if (activeNav === 'TV') return tvCatalog;
     return dynamicCatalog;
   }, [activeNav, dynamicCatalog, moviesCatalog, animeCatalog, toonsCatalog, trendingCatalog, tvCatalog]);
@@ -1150,6 +1102,14 @@ export default function App() {
     showToast('Refreshed animation catalog pipeline');
   };
 
+  if (authState === 'hydrating' || authState === 'ready' && !user) {
+    return (
+      <div className="bg-[#040a0f] text-[#f0fdfa] h-screen flex items-center justify-center font-cartoon text-xl">
+        <Loader2 className="w-8 h-8 animate-spin text-[#00f2fe] mr-3" />
+        <span>Initializing X2Shows Vault...</span>
+      </div>
+    );
+  }
   if (authLoading) {
     return (
       <div className="bg-[#040a0f] text-[#f0fdfa] h-screen flex items-center justify-center font-cartoon text-xl">
@@ -1160,7 +1120,10 @@ export default function App() {
   }
 
   if (!user) {
-    return <Auth user={user} />;
+    return <Auth user={user} onSuccess={() => {
+      authTransition('hydrating', { user: { email: 'authenticated' } });
+      setTimeout(() => authTransition('ready'), 1000);
+  }} />;
   }
 
   return (
@@ -1199,17 +1162,18 @@ export default function App() {
         
         {/* If Active Watch Show is selected: Render the Dedicated 3rd Watch Page */}
         {activeWatchShow ? (
-          <WatchPage
+          <React.Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950"><Loader2 className="w-12 h-12 animate-spin text-indigo-500" /></div>}><WatchPage
             show={activeWatchShow.show}
-            initialEpisodeNumber={activeWatchShow.episodeNumber || 1}
+            initialEpisodeNumber={activeWatchShow.episodeNumber}
+            initialSeasonNumber={activeWatchShow.seasonNumber}
             onBack={() => setActiveWatchShow(null)}
-            onSelectShow={(nextShow) => setActiveWatchShow({ show: nextShow, episodeNumber: 1 })}
+            onSelectShow={(nextShow) => setActiveWatchShow({ show: nextShow })}
             onToggleWatchlist={handleToggleWatchlist}
             isInWatchlist={watchlist.some(w => w.showId === activeWatchShow.show.id || w.id === activeWatchShow.show.id)}
             onShowToast={showToast}
-          />
+          /></React.Suspense>
         ) : activeDetailShow ? (
-          <ShowDetailPage
+          <React.Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/90"><Loader2 className="w-12 h-12 animate-spin text-indigo-500" /></div>}><ShowDetailPage
             show={activeDetailShow}
             onBack={() => setActiveDetailShow(null)}
             onPlayShow={handleRegisterPlayCard}
@@ -1217,7 +1181,7 @@ export default function App() {
             isInWatchlist={watchlist.some(w => w.showId === activeDetailShow.id || w.id === activeDetailShow.id)}
             onSelectShow={(nextShow) => setActiveDetailShow(nextShow)}
             onShowToast={showToast}
-          />
+          /></React.Suspense>
         ) : (
           <>
             {/* 1. Header & Navigation with Watchlist Tab and Live Dynamic Badges */}
@@ -1253,7 +1217,7 @@ export default function App() {
             {/* Conditional View: If Watchlist is active, show WatchlistView; if Search query active, show SearchResultsFilterView; otherwise show CategoriesBar + Hero + Sections */}
             {activeNav === 'Watchlist' ? (
               <main className="flex-1 anim-tab-fade-slide" key="watchlist-view">
-                <WatchlistView
+                <React.Suspense fallback={<div className="flex-1 flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>}><WatchlistView
                   watchlist={watchlist}
                   aspectRatio={aspectRatio}
                   onUpdateItemStatus={handleUpdateItemStatus}
@@ -1267,11 +1231,11 @@ export default function App() {
                   onOpenDetails={(item) => handleOpenShowDetails(item)}
                   onQuickAddShow={handleAddToWatchlist}
                   onShowToast={showToast}
-                />
+                /></React.Suspense>
               </main>
             ) : searchQuery.trim() || (activeNav !== 'Home' && activeNav !== 'Originals') ? (
               <main className="flex-1 anim-tab-fade-slide" key="search-results-filter-view">
-                <SearchResultsFilterView
+                <React.Suspense fallback={<div className="flex-1 flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>}><SearchResultsFilterView
                   initialQuery={searchQuery.trim()}
                   catalog={searchQuery.trim() ? dynamicCatalog : filteredCatalogForNav}
                   aspectRatio={aspectRatio}
@@ -1285,7 +1249,7 @@ export default function App() {
                     setSelectedCategory('All');
                     setActiveNav('Home');
                   }}
-                />
+                /></React.Suspense>
               </main>
             ) : (
               <div key={activeNav} className="tab-transition-container anim-tab-fade-slide flex flex-col flex-1">
@@ -1574,22 +1538,19 @@ export default function App() {
             showToast('Opened Dual API Inspector via Taskbar');
           }}
           onShowToast={showToast}
-          isBugsVisible={isBugsVisible}
-          onToggleBugs={handleToggleBugs}
-          isMascotVisible={isMascotVisible}
-          onToggleMascot={handleToggleMascot}
-          isMatrixOpen={isMatrixOpen}
-          onToggleMatrix={handleToggleMatrix}
+          
+          
+          
         />
 
       </div>
 
       {/* 10. Dual API Fallback & Cache Inspector Modal */}
-      <DualApiStatusModal
+      <React.Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>}><DualApiStatusModal
         isOpen={isDualApiModalOpen}
         onClose={() => setIsDualApiModalOpen(false)}
         onShowToast={showToast}
-      />
+      /></React.Suspense>
 
       {/* 11. Toast Notification Feedback */}
       <ToastNotification message={toastMessage} />
@@ -1598,18 +1559,13 @@ export default function App() {
       <GlobalShaderProvider />
 
       {/* 🔴 FLOATING BUTTON THAT OPENS THE LIVE BOT HUD */}
-      <AiAgentMatrixModal isOpen={isMatrixOpen} onClose={handleToggleMatrix} />
 
       {/* Visual cyber bugs patrolling the screen */}
-      <CyberBugSwarm isVisible={isBugsVisible} />
 
       {/* 🔴 THE ANIMATED WALKING MASCOT */}
-      <MascotCurator isVisible={isMascotVisible} />
 
       {/* Developer Diagnostics & Self-Healing Panel (Ctrl + Shift + D) */}
-      <React.Suspense fallback={null}>
-        <DeveloperDiagnosticsPanel isOpen={isDiagnosticsOpen} onClose={() => setIsDiagnosticsOpen(false)} />
-      </React.Suspense>
+      
 
     </div>
     </AutoErrorCatcher>

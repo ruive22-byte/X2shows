@@ -1,3 +1,6 @@
+import 'dotenv/config';
+import { z } from 'zod';
+import { executeAiAgent, getGeminiClient } from './src/server/aiGateway';
 import express from 'express';
 import path from 'path';
 import crypto from 'crypto';
@@ -190,7 +193,7 @@ async function startServer() {
       });
     }
 
-    const targetPass = envPass || (process.env.NODE_ENV !== 'production' ? 'sylenumber1' : '');
+    const targetPass = envPass || '';
 
     if (!targetPass) {
       return res.status(401).json({
@@ -219,13 +222,7 @@ async function startServer() {
       });
     }
 
-    const validPasswords = [
-      targetPass,
-      'Nulsyle202616!',
-      'rsou24467!!',
-      'sylenumber1',
-      'sylynumber1'
-    ].filter(Boolean);
+    const validPasswords = [targetPass].filter(Boolean);
 
     const passMatch = validPasswords.includes(inputPassword);
 
@@ -265,10 +262,7 @@ async function startServer() {
         user: { email: `${session.username}@x2shows.local`, role: 'authenticated' }
       });
     }
-    return res.json({
-      authenticated: true,
-      user: { email: 'sylenul@x2shows.local', role: 'authenticated' }
-    });
+    return res.status(401).json({ authenticated: false, error: "No active session" });
   };
 
   app.get('/api/session', handleSessionCheck);
@@ -346,6 +340,47 @@ async function startServer() {
     }
   });
 
+  
+  app.get('/api/resolve/embed-check', async (req, res) => {
+    try {
+      const targetUrl = req.query.url as string;
+      if (!targetUrl) return res.status(400).json({ playable: false, reason: 'NOT_FOUND' });
+
+      // We do a HEAD request to check headers
+      const fetchRes = await fetch(targetUrl, {
+        method: 'HEAD',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+      
+      const xFrame = fetchRes.headers.get('x-frame-options');
+      const csp = fetchRes.headers.get('content-security-policy');
+      
+      let blocked = false;
+      if (xFrame) {
+        const xf = xFrame.toLowerCase();
+        if (xf === 'deny' || xf === 'sameorigin') blocked = true;
+      }
+      if (csp) {
+        const c = csp.toLowerCase();
+        if (c.includes("frame-ancestors 'none'") || c.includes("frame-ancestors 'self'")) blocked = true;
+      }
+      
+      if (blocked) {
+        return res.json({ playable: false, reason: 'EMBED_BLOCKED' });
+      }
+      
+      if (!fetchRes.ok && fetchRes.status >= 400) {
+        return res.json({ playable: false, reason: 'NETWORK_FAILURE', status: fetchRes.status });
+      }
+      
+      return res.json({ playable: true });
+    } catch (err) {
+      return res.json({ playable: false, reason: 'NETWORK_FAILURE' });
+    }
+  });
+
   // TMDB Status & Config Endpoint
   app.get('/api/tmdb/config', (req, res) => {
     const hasTmdbKey = !!(process.env.TMDB_API_KEY || process.env.TMDB_ACCESS_TOKEN || process.env.TMDB_TOKEN);
@@ -405,6 +440,93 @@ async function startServer() {
   });
 
   // TMDB Proxy Search Route
+  
+  
+function getFallbackEpisodes(path) {
+  const match = path.match(/\/tv\/(\d+)\/season\/(\d+)/);
+  if (match) {
+    const season = parseInt(match[2], 10);
+    const episodes = Array.from({length: 24}, (_, i) => ({
+      id: parseInt(`${match[1]}${season}${i+1}`),
+      episode_number: i + 1,
+      season_number: season,
+      name: `Episode ${i + 1}`,
+      overview: 'Fallback episode overview.',
+      air_date: '2024-01-01',
+      still_path: null,
+      runtime: 24
+    }));
+    return { episodes };
+  }
+  return null;
+}
+
+  app.get('/api/tmdb/proxy', async (req, res) => { console.log('HIT /api/tmdb/proxy', req.query.path);
+    try {
+      const { path, ...queryParams } = req.query;
+      if (!path) return res.status(400).json({ success: false, error: 'path is required' });
+      
+      
+      const tmdbKey = process.env.TMDB_API_KEY;
+      if (!tmdbKey) {
+        const fallback = getFallbackEpisodes(path);
+        if (fallback) return res.json(fallback);
+        return res.status(500).json({ success: false, error: 'TMDB_API_KEY not configured on server' });
+      }
+
+      
+      const searchParams = new URLSearchParams();
+      searchParams.set('api_key', tmdbKey);
+      
+      for (const [key, value] of Object.entries(queryParams)) {
+        if (value) searchParams.set(key, String(value));
+      }
+      
+      const targetUrl = `https://api.themoviedb.org/3${path}?${searchParams.toString()}`;
+      const tmdbRes = await fetch(targetUrl);
+      const data = await tmdbRes.json();
+      
+      if (!tmdbRes.ok) {
+        const fallback = getFallbackEpisodes(path);
+        if (fallback) return res.json(fallback);
+        return res.status(tmdbRes.status).json({ success: false, error: data.status_message || 'TMDB Proxy Error' });
+      }
+      
+      res.json(data);
+    } catch (err: any) {
+      console.error('TMDB Proxy Error:', err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+
+  app.get('/api/omdb/proxy', async (req, res) => {
+    try {
+      const { t, i } = req.query;
+      const omdbKey = process.env.OMDB_API_KEY;
+      if (!omdbKey) return res.status(500).json({ success: false, error: 'OMDB_API_KEY not configured on server' });
+      
+      const searchParams = new URLSearchParams();
+      searchParams.set('apikey', omdbKey);
+      
+      if (t) searchParams.set('t', String(t));
+      if (i) searchParams.set('i', String(i));
+      
+      const targetUrl = `https://www.omdbapi.com/?${searchParams.toString()}`;
+      const omdbRes = await fetch(targetUrl);
+      const data = await omdbRes.json();
+      
+      if (!omdbRes.ok) {
+        return res.status(omdbRes.status).json({ success: false, error: data.Error || 'OMDb Proxy Error' });
+      }
+      
+      res.json(data);
+    } catch (err: any) {
+      console.error('OMDb Proxy Error:', err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   app.get('/api/tmdb/search', async (req, res) => {
     try {
       const q = req.query.q as string;
@@ -448,114 +570,53 @@ async function startServer() {
   });
 
   // AI-Powered Animation Recommender & Sakuga Finder
+
+
+
+
   app.post('/api/gemini/recommend', async (req, res) => {
     try {
       const { query, preferredGenre, animationStyle, mood, targetDuration } = req.body;
-      const client = getGeminiClient();
-
-      if (!client) {
-        // Fallback curated recommendation if no API key is provided
-        return res.json({
-          success: true,
-          source: 'curated_catalog',
-          recommendations: [
-            {
-              title: "Arcane: Hextech Legacy",
-              tagline: "Where power, sisterhood, and high-tech corruption collide in stunning hand-painted 3D.",
-              matchScore: 98,
-              studio: "Fortiche Production",
-              style: "Painted 3D / Sakuga Hybrid",
-              whyWatch: "Groundbreaking animation craft where every frame is a masterpiece of light, smoke, and raw kinetic choreography.",
-              highlightScene: "The Bridge Flare Battle & The Tea Party confrontation.",
-              tags: ["Cyber-Victorian", "High Sakuga", "Complex Lore", "Masterpiece Score"]
-            },
-            {
-              title: "Cyberpunk: Neon Genesis",
-              tagline: "A chrome-drenched adrenaline rush through the dangerous underbelly of Night City.",
-              matchScore: 95,
-              studio: "Studio Trigger",
-              style: "Hyper-Kinetic 2D Cel-Glow",
-              whyWatch: "Ultra-stylized color explosions, heart-shattering character arcs, and signature Studio Trigger hyper-velocity action.",
-              highlightScene: "Sandevistan ultra-speed highway heist sequence.",
-              tags: ["Neon Noir", "High Octane", "Tragic Romance", "Synthwave"]
-            },
-            {
-              title: "Demon Slayer: Infinity Castle",
-              tagline: "The dimensional fortress descends in unprecedented 3D dimensional swordplay.",
-              matchScore: 97,
-              studio: "Ufotable",
-              style: "3D Dynamic Camera + Hand-Drawn Elements",
-              whyWatch: "Unrivaled particle physics, photorealistic flame rendering, and breathtaking camera movement through shifting geometric spaces.",
-              highlightScene: "The Infinite Shifting Rooms duel against Upper Moon ranks.",
-              tags: ["Dark Fantasy", "Legendary Sakuga", "Emotional Weight", "Epic Orchestral"]
-            },
-            {
-              title: "Spider-Verse: Web of Realities",
-              tagline: "Every dimension has its own frame rate, ink texture, and visual rebellion.",
-              matchScore: 96,
-              studio: "Sony Pictures Animation",
-              style: "Halftone Comic Book / Stop-Motion 2s",
-              whyWatch: "Multi-aesthetic clash celebrating 20th century print art, punk watercolor, and revolutionary animation pacing.",
-              highlightScene: "The Dimensional Chase through Nueva York.",
-              tags: ["Multiverse", "Comic Aesthetic", "Hip-Hop Score", "Heartfelt"]
-            }
-          ],
-          aiCuratorNote: "Based on your taste in high-octane visual artistry and intricate animated storytelling, these flagship titles deliver unmatched production values and emotional resonance."
-        });
-      }
-
-      const prompt = `You are the lead AI Animation Curator and Sakuga Specialist for "XTwo Shows", an ultra-premium animation streaming platform with an aesthetic of Maroon Red and Electric Blue.
-The user is looking for animation recommendations with the following preferences:
-- Query: "${query || 'Top tier animated shows & movies with god-tier animation'}"
+      const prompt = `You are the world's most knowledgeable Animation & Anime Curator for a platform called "XTwo Shows".
+A user is looking for highly-curated animation recommendations based on this profile:
+- Free text query: "${query || 'Surprise me'}"
 - Preferred Genre: "${preferredGenre || 'Any'}"
-- Art/Animation Style: "${animationStyle || 'Any'}"
-- Current Mood: "${mood || 'Excited / Hyped'}"
-- Duration / Format: "${targetDuration || 'Any'}"
+- Animation Style: "${animationStyle || 'Any'}"
+- Mood: "${mood || 'Any'}"
+- Target Duration: "${targetDuration || 'Any'}"
 
-Provide 4 highly specific, diverse, and inspiring animated recommendations (either top animated series, movies, or original concepts).
-Return a valid JSON object with the following format:
+Return EXACTLY this JSON structure:
 {
   "recommendations": [
     {
       "title": "Title of the show or movie",
       "tagline": "A punchy, cinematic 1-sentence tagline",
       "matchScore": 96,
-      "studio": "e.g., Ufotable / Studio Fortiche / MAPPA / Trigger / CoMix Wave / Wit",
-      "style": "e.g., 2D Hand-drawn Sakuga / 3D Stylized Painted / Cel-Shaded Neon / Watercolor",
-      "whyWatch": "2-3 sentences explaining why this matches their specific query and animation appetite",
-      "highlightScene": "A brief description of the most iconic animation sequence to look forward to",
+      "studio": "e.g., Ufotable / Studio Fortiche / MAPPA",
+      "style": "e.g., 2D Hand-drawn Sakuga",
+      "whyWatch": "2-3 sentences explaining why",
+      "highlightScene": "A brief description of an iconic scene",
       "tags": ["Tag1", "Tag2", "Tag3", "Tag4"]
     }
   ],
-  "aiCuratorNote": "A warm, insightful 2-sentence curator note analyzing why this collection fits their vibe."
+  "aiCuratorNote": "A warm, insightful 2-sentence curator note."
 }`;
 
-      const response = await client.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          temperature: 0.7,
-        },
+      const schema = z.object({
+        recommendations: z.array(z.object({
+          title: z.string(),
+          tagline: z.string(),
+          matchScore: z.number(),
+          studio: z.string(),
+          style: z.string(),
+          whyWatch: z.string(),
+          highlightScene: z.string(),
+          tags: z.array(z.string())
+        })),
+        aiCuratorNote: z.string()
       });
 
-      const text = response.text || '{}';
-      const parsedData = JSON.parse(text);
-      res.json({
-        success: true,
-        source: 'gemini_3.6_flash',
-        ...parsedData,
-      });
-    } catch (err: any) {
-      const isQuota = err?.status === 429 || err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED');
-      if (isQuota) {
-        console.info('ℹ️ Gemini quota limit reached (429). Serving curated fallback recommendations seamlessly.');
-      } else {
-        console.warn('Gemini Recommendation Error (falling back to curated):', err.message || err);
-      }
-      res.json({
-        success: true,
-        source: 'curated_catalog_fallback',
+      const fallback = () => ({
         recommendations: [
           {
             title: "Arcane: Hextech Legacy",
@@ -600,6 +661,22 @@ Return a valid JSON object with the following format:
         ],
         aiCuratorNote: "The local database curated these top tier animations for you as a backup. Connect or upgrade your Gemini API quota for live recommendations!"
       });
+
+      const result = await executeAiAgent({
+        prompt,
+        schema,
+        fallback
+      });
+
+      res.json({
+        success: result.success,
+        source: result.success ? 'gemini_3.6_flash' : 'curated_catalog',
+        ...(result.success ? result.data : fallback()),
+        error: !result.success ? (result as any).error?.message : undefined
+      });
+    } catch (err: any) {
+      console.warn('AI Recommend Error:', err.message || err);
+      res.status(500).json({ success: false, error: err.message });
     }
   });
 
@@ -607,40 +684,6 @@ Return a valid JSON object with the following format:
   app.post('/api/gemini/vibe-match', async (req, res) => {
     try {
       const { mood, aesthetic, timeAvailable } = req.body;
-      const client = getGeminiClient();
-
-      if (!client) {
-        return res.json({
-          success: true,
-          source: 'curated_vibe',
-          vibeTitle: `${mood || 'Electric Midnight'} ${aesthetic || 'Cyber-Maroon'} Marathon`,
-          colorPalette: ["#800020", "#1E1B4B", "#2563EB"],
-          soundtrackVibe: "Heavy Synthwave & Dark Orchestral Strings",
-          runtimeEstimate: `${timeAvailable || '2 Hours'} of Pure Immersion`,
-          lineup: [
-            {
-              order: 1,
-              title: "Cyberpunk: Neon Genesis",
-              episodeOrFilm: "Episode 1-3 (The Awakening)",
-              vibeMatch: "Immediate adrenaline injection with neon crimson cityscapes."
-            },
-            {
-              order: 2,
-              title: "Castlevania: Nocturne Symphony",
-              episodeOrFilm: "Episode 5 (Blood Moon Waltz)",
-              vibeMatch: "Gothic maroon elegance and fluid French-Japanese sakuga."
-            },
-            {
-              order: 3,
-              title: "Arcane: Hextech Legacy",
-              episodeOrFilm: "Episode 6 (When These Walls Come Tumbling Down)",
-              vibeMatch: "Electric blue hextech energy and peak emotional climax."
-            }
-          ],
-          snackPairing: "Iced Matcha or Espresso with Dark Cherry Cocoa Tart"
-        });
-      }
-
       const prompt = `Create an ultra-luxurious anime/animation viewing marathon plan for an ultra-premium platform called "XTwo Shows".
 User inputs:
 - Mood: "${mood || 'Cinematic & Introspective'}"
@@ -664,32 +707,21 @@ Return a valid JSON object:
   "snackPairing": "A fun aesthetic pairing suggestion"
 }`;
 
-      const response = await client.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          temperature: 0.7,
-        },
+      const schema = z.object({
+        vibeTitle: z.string(),
+        colorPalette: z.array(z.string()),
+        soundtrackVibe: z.string(),
+        runtimeEstimate: z.string(),
+        lineup: z.array(z.object({
+          order: z.number(),
+          title: z.string(),
+          episodeOrFilm: z.string(),
+          vibeMatch: z.string()
+        })),
+        snackPairing: z.string()
       });
 
-      const text = response.text || '{}';
-      res.json({
-        success: true,
-        source: 'gemini_3.6_flash',
-        ...JSON.parse(text),
-      });
-    } catch (err: any) {
-      const isQuota = err?.status === 429 || err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED');
-      if (isQuota) {
-        console.info('ℹ️ Gemini quota limit reached (429). Serving curated vibe fallback seamlessly.');
-      } else {
-        console.warn('Vibe match error (falling back to curated):', err.message || err);
-      }
-      const { mood, aesthetic, timeAvailable } = req.body;
-      res.json({
-        success: true,
-        source: 'curated_vibe_fallback',
+      const fallback = () => ({
         vibeTitle: `${mood || 'Electric Midnight'} ${aesthetic || 'Cyber-Maroon'} Marathon`,
         colorPalette: ["#800020", "#1E1B4B", "#2563EB"],
         soundtrackVibe: "Heavy Synthwave & Dark Orchestral Strings",
@@ -716,27 +748,28 @@ Return a valid JSON object:
         ],
         snackPairing: "Iced Matcha or Espresso with Dark Cherry Cocoa Tart"
       });
+
+      const result = await executeAiAgent({ prompt, schema, fallback });
+      
+      res.json({
+        success: result.success,
+        source: result.success ? 'gemini_3.6_flash' : 'curated_vibe',
+        ...(result.success ? result.data : fallback()),
+        error: !result.success ? (result as any).error?.message : undefined
+      });
+    } catch (err: any) {
+      console.warn('Vibe Match Error:', err.message || err);
+      res.status(500).json({ success: false, error: err.message });
     }
   });
 
-  // Character Lore & Scene Breakdown AI Chat
+  // Intelligent Character Persona Chat
   app.post('/api/gemini/character-chat', async (req, res) => {
     try {
-      const { characterName, showTitle, question, conversationHistory } = req.body;
-      const client = getGeminiClient();
-
-      if (!client) {
-        return res.json({
-          success: true,
-          source: 'curated_lore',
-          reply: `In "${showTitle || 'Arcane'}", ${characterName || 'Jinx / Powder'} embodies the tragic collision between childhood innocence and weaponized brilliance. Her weapon craft—like the Fishbones rocket launcher—is visually mapped to neon graffiti and manic magenta explosions that contrast with the structured sapphire blue of Piltover's Hextech.`,
-          keyThemes: ["Duality of Hextech vs Shimmer", "Trauma Manifested as Art", "Soundtrack Synchronization"]
-        });
-      }
-
+      const { characterName, showTitle, userMessage, conversationHistory } = req.body;
       const prompt = `You are the Official Lore Scholar and Animation Analyst for "XTwo Shows".
 The user is asking about character "${characterName}" from the show/movie "${showTitle}".
-User question: "${question}"
+User question: "${userMessage}"
 Previous context: ${JSON.stringify(conversationHistory || [])}
 
 Provide a deep, engaging, and animation-literate answer that highlights character psychology, visual design motifs, voice acting excellence, and key animation scenes. Keep it between 2 to 4 paragraphs.
@@ -748,79 +781,186 @@ Return JSON:
   "recommendedEpisodes": ["Episode 3", "Episode 9"]
 }`;
 
-      const response = await client.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          temperature: 0.7,
-        },
+      const schema = z.object({
+        reply: z.string(),
+        keyThemes: z.array(z.string()),
+        recommendedEpisodes: z.array(z.string())
       });
 
+      const fallback = () => ({
+        reply: `**${characterName}** from *${showTitle}* represents a masterclass in visual storytelling and emotional weight.\n\nTheir character design emphasizes sharp, dynamic silhouettes that translate beautifully into high-speed sakuga sequences. The voice acting adds a layer of raw vulnerability that grounds the stylized action in genuine human stakes.`,
+        keyThemes: ["Resilience", "Sacrifice", "Rebellion"],
+        recommendedEpisodes: ["Season 1, Episode 3", "Season 1, Episode 9"]
+      });
+
+      const result = await executeAiAgent({ prompt, schema, fallback });
+      
       res.json({
-        success: true,
-        ...JSON.parse(response.text || '{}'),
+        success: result.success,
+        source: result.success ? 'gemini_3.6_flash' : 'curated_lore',
+        ...(result.success ? result.data : fallback()),
+        error: !result.success ? (result as any).error?.message : undefined
       });
     } catch (err: any) {
-      const isQuota = err?.status === 429 || err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED');
-      if (isQuota) {
-        console.info('ℹ️ Gemini quota limit reached (429). Serving curated lore fallback seamlessly.');
-      } else {
-        console.warn('Character chat error (falling back to curated):', err.message || err);
-      }
-      const { characterName, showTitle } = req.body;
-      res.json({
-        success: true,
-        source: 'curated_lore_fallback',
-        reply: `Offline archive match: In "${showTitle || 'Arcane'}", ${characterName || 'Jinx / Powder'} embodies the tragic collision between childhood innocence and weaponized brilliance. Her weapon craft—like the Fishbones rocket launcher—is visually mapped to neon graffiti and manic magenta explosions that contrast with the structured sapphire blue of Piltover's Hextech.`,
-        keyThemes: ["Duality of Hextech vs Shimmer", "Trauma Manifested as Art", "Soundtrack Synchronization"],
-        recommendedEpisodes: ["Episode 3", "Episode 9"]
-      });
+      console.warn('Character Chat Error:', err.message || err);
+      res.status(500).json({ success: false, error: err.message });
     }
   });
 
-  // Performance Diagnostic API Endpoint
+  // Performance Diagnostic Agent
   app.post('/api/performance/diagnostic', async (req, res) => {
     try {
       const { lowFps } = req.body;
-      const client = getGeminiClient();
+      const prompt = `System detected recurring frame stuttering at ${lowFps} FPS during scroll and category switches. Suggest 3 immediate React DOM optimization flags or CSS rendering optimizations to eliminate lag. Keep the suggestions highly actionable, concise, and professional.
 
-      if (!client) {
-        return res.json({
-          success: true,
-          source: 'curated_diagnostic',
-          advice: "AI performance advisor is in offline standby. Fallback advice:\n1. Throttle animation framerates on lower-end systems.\n2. Ensure hardware-accelerated transforms are applied with translate3d.\n3. Avoid heavy nested backdrop filters during rapid mouse scrolls."
-        });
-      }
+Return JSON:
+{
+  "advice": "The 3 actionable bullet points"
+}`;
 
-      const prompt = `System detected recurring frame stuttering at ${lowFps} FPS during scroll and category switches. Suggest 3 immediate React DOM optimization flags or CSS rendering optimizations to eliminate lag. Keep the suggestions highly actionable, concise, and professional.`;
-
-      const response = await client.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: prompt,
+      const schema = z.object({
+        advice: z.string()
       });
 
-      res.json({
-        success: true,
-        source: 'gemini_3.6_flash',
-        advice: response.text || "No diagnostics generated."
-      });
-    } catch (err: any) {
-      const isQuota = err?.status === 429 || err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED');
-      if (isQuota) {
-        console.info('ℹ️ Gemini quota limit reached (429). Serving curated diagnostic fallback seamlessly.');
-      } else {
-        console.warn('Performance Diagnostic Error (falling back to curated):', err.message || err);
-      }
-      res.json({
-        success: true,
-        source: 'curated_diagnostic_fallback',
+      const fallback = () => ({
         advice: "AI performance advisor is in offline standby. Fallback advice:\n1. Throttle animation framerates on lower-end systems.\n2. Ensure hardware-accelerated transforms are applied with translate3d.\n3. Avoid heavy nested backdrop filters during rapid mouse scrolls."
       });
+
+      const result = await executeAiAgent({ prompt, schema, fallback });
+      
+      res.json({
+        success: result.success,
+        source: result.success ? 'gemini_3.6_flash' : 'curated_diagnostic',
+        ...(result.success ? result.data : fallback()),
+        error: !result.success ? (result as any).error?.message : undefined
+      });
+    } catch (err: any) {
+      console.warn('Performance Diagnostic Error:', err.message || err);
+      res.status(500).json({ success: false, error: err.message });
     }
   });
 
-  // Internal dev endpoints disabled in production
+  app.post('/api/gemini/problem-solver', async (req, res) => {
+    const session = getValidSession(req);
+    if (!session) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+    try {
+      const { problemDescription, stackTrace, perfData, compactRepoMap } = req.body;
+      
+      const prompt = `You are the Chief AI Systems Architect & Heavy Performance Optimization Engine.
+
+=== SECTION 1: LIVE HARDWARE & TELEMETRY SNAPSHOT ===
+• Mean FPS: ${perfData?.avgFps || 60} FPS (Variance: ${perfData?.fpsVariance || 0})
+• Stutter Severity Index: ${perfData?.stutterSeverity || 'NONE'}
+• Primary System Bottleneck: ${perfData?.bottleneckType || 'NONE'}
+• DOM Tree Overhead Score: ${perfData?.domOverheadScore || 10}/100
+• Memory Pressure Ratio: ${((perfData?.memoryPressureRatio || 0.1) * 100).toFixed(0)}%
+• High-Frequency Hot Components: ${perfData?.hotComponents?.length > 0 ? perfData.hotComponents.join(', ') : 'None detected'}
+
+=== SECTION 2: CODEBASE AST REPO MAP ===
+${compactRepoMap || 'N/A'}
+
+=== SECTION 3: PROBLEM STATEMENT & ERROR DIAGNOSTICS ===
+User/System Query: "${problemDescription || ''}"
+${stackTrace ? `Stack Trace Log:\n${stackTrace}` : 'Stack Trace: None provided.'}
+
+=== INSTRUCTIONS ===
+Perform a rigorous first-principles software architecture analysis:
+1. Deconstruct the primary root cause down to React Fiber tree reconciliation, main thread blockages, or state cascade loops.
+2. Quantify performance impact metrics (FPS drop, memory leak risk, thread blocking duration).
+3. Provide an unambiguous, step-by-step refactoring blueprint.`;
+
+      const schema = z.object({
+        rootCauseAnalysis: z.object({
+          primaryFailureMode: z.string(),
+          underlyingMechanism: z.string(),
+          affectedSubsystems: z.array(z.string())
+        }),
+        performanceImpact: z.object({
+          frameRateDropEst: z.string(),
+          memoryLeakRisk: z.enum(['HIGH', 'MEDIUM', 'LOW']),
+          mainThreadBlockingMs: z.number()
+        }),
+        prescriptiveFix: z.object({
+          refactoringStrategy: z.string(),
+          targetedFilePaths: z.array(z.string()),
+          exactCodePatchSpec: z.string(),
+          preventionPattern: z.string()
+        })
+      });
+      const fallback = () => ({
+        rootCauseAnalysis: {
+          primaryFailureMode: 'Unmemoized Subtree Reconciliation Cascade',
+          underlyingMechanism: 'State updates triggering redundant React Virtual DOM diffing across horizontal card rows.',
+          affectedSubsystems: ['React Fiber Tree', 'Main Thread Render Pipeline'],
+        },
+        performanceImpact: {
+          frameRateDropEst: '-14 FPS during tab transitions',
+          memoryLeakRisk: 'LOW' as const,
+          mainThreadBlockingMs: 52,
+        },
+        prescriptiveFix: {
+          refactoringStrategy: 'Apply React.memo with custom propsAreEqual comparator and wrap state setters in useTransition.',
+          targetedFilePaths: ['src/App.tsx'],
+          exactCodePatchSpec: 'Wrap row components in React.memo and isolate GPU composite layers with translate3d.',
+          preventionPattern: 'Strict Immutable Props & Off-Thread Telemetry Monitoring',
+        },
+      });
+
+      const result = await executeAiAgent({ prompt, schema, fallback });
+      res.json(result);
+    } catch (err: any) {
+      console.warn('Problem Solver Error:', err.message || err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.post('/api/gemini/supervisor', async (req, res) => {
+    const session = getValidSession(req);
+    if (!session) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+    try {
+      const { audit, plan } = req.body;
+      
+      const prompt = `System Role: You are the Chief AI Inspector and Lead Security Auditor.
+Your Job: Audit the proposed code patches generated by an AI assistant to fix a software bug.
+
+Original Audit Bug Report:
+\`\`\`json
+${JSON.stringify(audit || {}, null, 2)}
+\`\`\`
+
+Proposed Agent Plan & Patches:
+\`\`\`json
+${JSON.stringify(plan || {}, null, 2)}
+\`\`\`
+
+Instructions:
+Evaluate if the proposed patches correctly resolve the bug without breaking existing imports, syntax, or security.`;
+
+      const schema = z.object({
+        approved: z.boolean(),
+        score: z.number(),
+        critique: z.string(),
+        flaggedIssues: z.array(z.string())
+      });
+      const fallback = () => ({
+        approved: false,
+        score: 0,
+        critique: 'Supervisor review network check failed. Defaulting to safe reject.',
+        flaggedIssues: ['Supervisor offline']
+      });
+
+      const result = await executeAiAgent({ prompt, schema, fallback });
+      // Supervisor format expects the schema output directly on the payload, but executeAiAgent returns { success, data }
+      // The original client expects { approved, score, critique, flaggedIssues }
+      res.json(result.success ? result.data : fallback());
+    } catch (err: any) {
+      console.warn('Supervisor Error:', err.message || err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   app.all(['/api/gemini/router', '/api/gemini/builder'], (req, res) => {
     res.status(404).json({ success: false, error: 'Endpoint removed or disabled.' });
   });

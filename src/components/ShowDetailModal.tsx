@@ -55,7 +55,7 @@ export const ShowDetailModal: React.FC<ShowDetailModalProps> = ({
 
     // Try fetching live enriched TVmaze episode guide
     setIsLoadingEpisodes(true);
-    fetchTvMazeEpisodes(show.title).then((tvmazeEps) => {
+    fetchTvMazeEpisodes(show.title || show.name || '', show.tmdbId || 0).then((tvmazeEps) => {
       if (tvmazeEps && tvmazeEps.length > 0) {
         setDynamicEpisodes(tvmazeEps);
         setEpisodeSource('TVMAZE');

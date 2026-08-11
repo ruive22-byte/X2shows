@@ -61,7 +61,7 @@ export class AutoErrorCatcher extends Component<Props, State> {
               📋 Copy Crash Report Prompt for AI
             </button>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => window.location.href = '/'}
               className="w-full py-2 bg-[#0d2836] text-white font-black text-xs rounded-xl border border-black hover:bg-black/40 cursor-pointer"
             >
               🔄 Reload Player App

@@ -2,8 +2,7 @@ import { CatalogItem, WatchProvidersData, WatchProviderInfo } from '../../types/
 import { LRUCache } from './lruCache';
 import { catalogStorage } from './catalogStorage';
 
-const TMDB_API_KEY = (import.meta as any)?.env?.VITE_TMDB_API_KEY || '4f298a53e5522830c95f789f05e9d60e';
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const TMDB_BASE_URL = '/api/tmdb/proxy?path=';
 const TMDB_LOGO_BASE = 'https://image.tmdb.org/t/p/w92';
 
 const watchProvidersCache = new LRUCache<string, Promise<WatchProvidersData | null>>(300);
@@ -32,7 +31,7 @@ export async function fetchWatchProviders(
     }
 
     try {
-      const url = `${TMDB_BASE_URL}/${type}/${tmdbId}/watch/providers?api_key=${TMDB_API_KEY}`;
+      const url = `${TMDB_BASE_URL}/${type}/${tmdbId}/watch/providers`;
       const res = await fetch(url);
       if (!res.ok) return null;
 

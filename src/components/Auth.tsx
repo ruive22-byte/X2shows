@@ -8,9 +8,10 @@ import { Shield, LogOut, User as UserIcon, Lock, Mail, AlertTriangle, Zap } from
 
 interface AuthProps {
   user: any;
+  onSuccess?: () => void;
 }
 
-export default function Auth({ user }: AuthProps) {
+export default function Auth({ user, onSuccess }: AuthProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -32,10 +33,8 @@ export default function Auth({ user }: AuthProps) {
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
-          if (data.token) {
-            localStorage.setItem('x2shows_session_token', data.token);
-          }
-          window.location.reload();
+          
+          if (onSuccess) onSuccess(); else window.location.reload();
           return;
         }
       } else {
@@ -49,7 +48,7 @@ export default function Auth({ user }: AuthProps) {
 
       // 2. Firebase authentication fallback
       await signInWithEmailAndPassword(auth, loginUser, loginPass);
-      window.location.reload();
+      if (onSuccess) onSuccess(); else window.location.reload();
     } catch (err: any) {
       const msg = err.message || '';
       if (msg.includes('api-key-not-valid') || msg.includes('configuration') || msg.includes('auth/')) {
@@ -67,23 +66,9 @@ export default function Auth({ user }: AuthProps) {
     await performLogin(email, password);
   };
 
-  const handleQuickAutoLogin = useCallback(async () => {
-    setEmail('sylenul');
-    setPassword('Nulsyle202616!');
-    await performLogin('sylenul', 'Nulsyle202616!');
-  }, []);
+  
 
-  // Keyboard shortcut (Ctrl + Shift + A) to automatically sign in
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a' || e.key === 'L' || e.key === 'l')) {
-        e.preventDefault();
-        handleQuickAutoLogin();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleQuickAutoLogin]);
+  
 
   const handleLogout = async () => {
     try {
@@ -95,7 +80,7 @@ export default function Auth({ user }: AuthProps) {
     localStorage.removeItem('x2shows_guest_user');
     localStorage.removeItem('x2shows_auth_token');
     localStorage.removeItem('x2shows_session_token');
-    window.location.reload();
+    if (onSuccess) onSuccess(); else window.location.reload();
   };
 
   if (user) {
@@ -108,14 +93,6 @@ export default function Auth({ user }: AuthProps) {
           <p className="text-xs font-medium text-slate-200 truncate max-w-[140px]">{user.email || user.displayName || 'User'}</p>
           <p className="text-[10px] text-emerald-400 font-mono">Authenticated</p>
         </div>
-        <button 
-          onClick={handleLogout}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition-colors cursor-pointer"
-          title="Sign Out"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Sign Out</span>
-        </button>
       </div>
     );
   }
@@ -177,39 +154,17 @@ export default function Auth({ user }: AuthProps) {
             </div>
           </div>
 
-          <button 
-            type="submit" 
+                  <button
+            type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium rounded-xl shadow-lg shadow-blue-500/25 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full mt-2 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? (
-              <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <span>Sign In</span>
-            )}
+            {loading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
 
-        <div className="relative my-5">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-800" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-slate-950 px-2 text-slate-500 font-mono">or shortcut</span>
-          </div>
-        </div>
+        
 
-        <button
-          type="button"
-          onClick={handleQuickAutoLogin}
-          disabled={loading}
-          className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 border border-slate-700/60 text-cyan-400 hover:text-cyan-300 font-mono text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 group"
-          title="Auto Sign-In as sylenul (Ctrl+Shift+A)"
-        >
-          <Zap className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
-          <span>⚡ Quick Auto Sign-In (sylenul)</span>
-          <span className="ml-auto text-[10px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">Ctrl+Shift+A</span>
-        </button>
 
       </div>
     </div>

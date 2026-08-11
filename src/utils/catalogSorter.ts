@@ -42,7 +42,7 @@ export class CatalogSorter {
   public static getNewlyAddedSection(catalog: CatalogItem[], limit: number = 25): CatalogItem[] {
     const explicitNew = catalog.filter(
       (item) => item.isNewlyAdded === true || item.category === 'Newly Added'
-    );
+    ).reverse();
     
     const regularCatalog = catalog.filter(
       (item) => !item.isNewlyAdded && item.category !== 'Newly Added'

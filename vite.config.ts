@@ -7,6 +7,7 @@ export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
     build: {
+      chunkSizeWarningLimit: 800,
       minify: 'terser' as const,
       terserOptions: {
         compress: {
@@ -17,6 +18,17 @@ export default defineConfig(() => {
           toplevel: true,
         },
       },
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            motion: ['motion/react'],
+            lucide: ['lucide-react'],
+            catalogData: ['./src/data/tmdbData.ts', './src/data/showsData.ts'],
+            firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          }
+        }
+      }
     },
     resolve: {
       alias: {

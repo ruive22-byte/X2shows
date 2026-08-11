@@ -60,12 +60,12 @@ export const DualApiStatusModal: React.FC<DualApiStatusModalProps> = ({
 
     try {
       // 1. Test TVmaze search (Secondary Tier)
-      const tvmaze = await searchTvMazeShow(testQuery);
+      const tvmaze = await searchTvMazeShow(testQuery, 0);
       let episodesCount = 0;
       let sampleEp: any = null;
 
       if (tvmaze && tvmaze.id) {
-        const eps = await fetchTvMazeEpisodes(testQuery, tvmaze.id);
+        const eps = await fetchTvMazeEpisodes(testQuery, 0, tvmaze.id);
         episodesCount = eps.length;
         sampleEp = eps[0] || null;
       }
@@ -94,8 +94,8 @@ export const DualApiStatusModal: React.FC<DualApiStatusModalProps> = ({
 
   const handlePreWarmAll = async () => {
     setIsPreWarming(true);
-    const titles = TMDB_ANIMATED_CATALOG.map((c) => c.title);
-    const count = await preWarmCatalogCache(titles);
+    const toWarm = TMDB_ANIMATED_CATALOG.map((c) => ({ title: c.title, tmdbId: c.tmdbId || Number(c.id.replace(/\D/g, '')) }));
+    const count = await preWarmCatalogCache(toWarm);
     setStats(getApiFallbackStats());
     setIsPreWarming(false);
     onShowToast(`⚡ Pre-warmed & cached ${count} animated shows in LocalStorage!`);

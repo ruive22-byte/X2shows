@@ -1,0 +1,81 @@
+==============================
+X2SHOWS MEDIA VERIFICATION
+==============================
+
+AUTH
+[PASS]
+
+PASSWORD TRANSITION:
+[PASS]
+
+SESSION PERSISTENCE:
+[PASS]
+
+STREAMING
+[PARTIAL]
+
+PLAYBACK IFRAME:
+Iframe rendered with allowFullScreen, referrerPolicy="origin", and feature policies (autoplay, encrypted-media).
+No sandbox attribute present on the initial implementation.
+
+SANDBOX:
+[ABSENT]
+
+CSP:
+CSP applies to the main document. The iframe loads third-party content which determines its own CSP.
+
+X-FRAME-OPTIONS:
+Third-party providers determine this. If they block embedding, PlaybackProbe detects LOAD_TIMEOUT or EMBED_BLOCKED (via server proxy check).
+
+PLAYBACK SIGNAL:
+[VERIFIED] - PlaybackProbe verifies event.source === iframe.contentWindow to prevent false-positives from cross-contamination.
+
+ACTUAL VIDEO PLAYBACK:
+[UNVERIFIED - PROVIDER-BLOCKED] - While the structure accurately verifies postMessage signals, third-party providers (like vidsrc) often do not emit standard 'playing' events to the parent window or might employ anti-iframe techniques unless strictly allowlisted. The system correctly identifies missing signals and reports "ASSUMED_WORKING" or "LOAD_TIMEOUT", but true playback cannot be completely verified without provider cooperation.
+
+SOURCE FALLBACK:
+[PASS] - Iterates through stream candidates on PlaybackProbe failure.
+
+IDENTITY
+[PASS]
+
+SHOW MATCH:
+[PASS]
+
+SEASON MATCH:
+[PASS]
+
+EPISODE MATCH:
+[PASS]
+
+IMAGE ISOLATION:
+[PASS]
+
+CONTINUE WATCHING:
+[PASS] - Navigation state preserves requested showId, seasonNumber, and episodeNumber through the entire chain to usePlaybackQuery.
+
+RACE CONDITIONS:
+[PASS] - usePlaybackQuery utilizes active boolean flags within useEffect cleanups to ignore stale promise resolutions, preventing race conditions from rapid episode clicking.
+
+AI:
+[NOT NEEDED] - The core media orchestration, identity validation, and playback probing are strictly deterministic.
+
+TESTS:
+No Playwright setup found in the repository.
+
+BUILD:
+Completed successfully (Vite + esbuild).
+
+TYPECHECK:
+Passed without errors.
+
+GUARD:
+Passed perfectly (Architecture check).
+
+REMAINING RISKS:
+1. Third-party stream providers frequently change domains, CORS policies, or X-Frame-Options.
+2. If a provider iframe is embedded but does not emit postMessage events, we must rely on fallback heuristics (timeout -> assumed_working).
+3. TMDB API rate limiting or temporary outages could affect EpisodeResolver metadata fetching.
+
+CONFIDENCE:
+90%

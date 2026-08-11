@@ -4,8 +4,7 @@ import { resolvePoster } from '../utils/posterResolver';
 import { normalizeCatalogItem } from '../utils/normalizer';
 
 // API Key can be set via env or fallback to open access
-const TMDB_API_KEY = (import.meta as any)?.env?.VITE_TMDB_API_KEY || '4f298a53e5522830c95f789f05e9d60e';
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const TMDB_BASE_URL = '/api/tmdb/proxy?path=';
 
 export interface TmdbApiResponse<T> {
   page: number;
@@ -120,11 +119,11 @@ export async function transformRawTmdbMedia(raw: RawTmdbMedia, mediaType: 'tv' |
 
 /**
  * Fetch Animated TV Shows via TMDB Discover API:
- * https://api.themoviedb.org/3/discover/tv?api_key=${KEY}&with_genres=16&sort_by=popularity.desc&page=${page}
+ * /api/tmdb/proxy?path=/discover/tv&with_genres=16&sort_by=popularity.desc&page=${page}
  */
 export async function fetchAnimatedTvShows(page: number = 1): Promise<{ shows: TmdbAnimatedShow[]; totalPages: number; page: number }> {
   try {
-    const url = `${TMDB_BASE_URL}/discover/tv?api_key=${TMDB_API_KEY}&with_genres=16&sort_by=popularity.desc&page=${page}&include_null_first_air_dates=false`;
+    const url = `${TMDB_BASE_URL}/discover/tv&with_genres=16&sort_by=popularity.desc&page=${page}&include_null_first_air_dates=false`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`TMDB HTTP error ${res.status}`);
     const data: TmdbApiResponse<RawTmdbMedia> = await res.json();
@@ -151,11 +150,11 @@ export async function fetchAnimatedTvShows(page: number = 1): Promise<{ shows: T
 
 /**
  * Fetch Animated Movies via TMDB Discover API:
- * https://api.themoviedb.org/3/discover/movie?api_key=${KEY}&with_genres=16&sort_by=popularity.desc&page=${page}
+ * /api/tmdb/proxy?path=/discover/movie&with_genres=16&sort_by=popularity.desc&page=${page}
  */
 export async function fetchAnimatedMovies(page: number = 1): Promise<{ shows: TmdbAnimatedShow[]; totalPages: number; page: number }> {
   try {
-    const url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=16&sort_by=popularity.desc&page=${page}`;
+    const url = `${TMDB_BASE_URL}/discover/movie&with_genres=16&sort_by=popularity.desc&page=${page}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`TMDB HTTP error ${res.status}`);
     const data: TmdbApiResponse<RawTmdbMedia> = await res.json();
@@ -242,7 +241,7 @@ export async function getFranchiseCollection(
   // Attempt to search TMDB for collection if not directly linked but is a movie
   if (!collectionId && show.media_type === 'movie') {
     try {
-      const searchRes = await fetch(`https://api.themoviedb.org/3/search/collection?api_key=4f298a53e5522830c95f789f05e9d60e&query=${encodeURIComponent(show.title || show.name)}`);
+      const searchRes = await fetch(`/api/tmdb/proxy?path=/search/collection&query=${encodeURIComponent(show.title || show.name)}`);
       if (searchRes.ok) {
         const data = await searchRes.json();
         if (data.results?.length > 0) {
@@ -258,10 +257,9 @@ export async function getFranchiseCollection(
 
   if (collectionId) {
     try {
-      const colRes = await fetch(`https://api.themoviedb.org/3/collection/${collectionId}?api_key=4f298a53e5522830c95f789f05e9d60e`);
-      if (colRes.ok) {
-        const data = await colRes.json();
-        if (data && data.parts && data.parts.length > 0) {
+      const colRes = await fetch(`/api/tmdb/proxy?path=/collection/${collectionId}`);
+      const data = await colRes.json();
+      if (data && data.parts && data.parts.length > 0) {
           const tmdbItems = await Promise.all(data.parts.map(async (raw: any) => {
              return {
                id: `tmdb-movie-${raw.id}`,
@@ -284,7 +282,6 @@ export async function getFranchiseCollection(
             }
           }
         }
-      }
     } catch (e) {
       console.warn("Collection fetch failed", e);
     }
@@ -369,7 +366,7 @@ export function getRelatedAndRecommendedShows(targetShow: TmdbAnimatedShow, pool
 
 export async function fetchTmdbDetails(tmdbId: number, type: 'tv' | 'movie', language: string = 'en-US'): Promise<any> {
   try {
-    const url = `${TMDB_BASE_URL}/${type}/${tmdbId}?api_key=${TMDB_API_KEY}&language=${encodeURIComponent(language)}`;
+    const url = `${TMDB_BASE_URL}/${type}/${tmdbId}&language=${encodeURIComponent(language)}`;
     const res = await fetch(url);
     if (!res.ok) return null;
     const data = await res.json();
@@ -397,7 +394,7 @@ export class TmdbApi {
 
     // 2. Network Fetch Fallback
     try {
-      const response = await fetch(`${TMDB_BASE_URL}/tv/${tmdbId}?api_key=${TMDB_API_KEY}&append_to_response=credits,recommendations`);
+      const response = await fetch(`${TMDB_BASE_URL}/tv/${tmdbId}&append_to_response=credits,recommendations`);
       if (!response.ok) throw new Error(`TMDB error ${response.status}`);
 
       const data = await response.json();
@@ -421,7 +418,7 @@ export class TmdbApi {
     if (cachedData) return cachedData;
 
     try {
-      const response = await fetch(`${TMDB_BASE_URL}/tv/${tmdbId}/season/${seasonNumber}?api_key=${TMDB_API_KEY}`);
+      const response = await fetch(`${TMDB_BASE_URL}/tv/${tmdbId}/season/${seasonNumber}`);
       if (!response.ok) throw new Error(`TMDB season fetch error`);
 
       const data = await response.json();

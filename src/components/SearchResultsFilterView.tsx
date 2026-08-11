@@ -277,29 +277,26 @@ export const SearchResultsFilterView: React.FC<SearchResultsFilterViewProps> = (
 
   // Format toggler
   const handleToggleFormat = (fmt: ShowFormat) => {
-    setSelectedFormats(prev => {
-      const next = prev.includes(fmt) ? prev.filter(f => f !== fmt) : [...prev, fmt];
-      onShowToast(next?.includes(fmt) ? `Added format filter: ${fmt}` : `Removed format filter: ${fmt}`);
-      return next;
-    });
+    const isSelected = selectedFormats.includes(fmt);
+    const next = isSelected ? selectedFormats.filter(f => f !== fmt) : [...selectedFormats, fmt];
+    setSelectedFormats(next);
+    onShowToast(!isSelected ? `Added format filter: ${fmt}` : `Removed format filter: ${fmt}`);
   };
 
   // Tag toggler
   const handleToggleTag = (tag: string) => {
-    setSelectedTags(prev => {
-      const next = prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag];
-      onShowToast(next?.includes(tag) ? `Added tag filter: #${tag}` : `Removed tag filter: #${tag}`);
-      return next;
-    });
+    const isSelected = selectedTags.includes(tag);
+    const next = isSelected ? selectedTags.filter(t => t !== tag) : [...selectedTags, tag];
+    setSelectedTags(next);
+    onShowToast(!isSelected ? `Added tag filter: #${tag}` : `Removed tag filter: #${tag}`);
   };
 
   // Genre toggler
   const handleToggleGenre = (genre: string) => {
-    setSelectedGenres(prev => {
-      const next = prev.includes(genre) ? prev.filter(g => g !== genre) : [...prev, genre];
-      onShowToast(next?.includes(genre) ? `Added genre filter: ${genre}` : `Removed genre filter: ${genre}`);
-      return next;
-    });
+    const isSelected = selectedGenres.includes(genre);
+    const next = isSelected ? selectedGenres.filter(g => g !== genre) : [...selectedGenres, genre];
+    setSelectedGenres(next);
+    onShowToast(!isSelected ? `Added genre filter: ${genre}` : `Removed genre filter: ${genre}`);
   };
 
   // Reset all filters

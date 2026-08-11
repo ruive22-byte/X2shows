@@ -1,0 +1,1918 @@
+[
+  {
+    "showId": "tmdb-tv-94605",
+    "title": "Arcane",
+    "canonicalId": 94605,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-136283",
+    "title": "Solo Leveling",
+    "canonicalId": 136283,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-105248",
+    "title": "Cyberpunk: Edgerunners",
+    "canonicalId": 105248,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-129",
+    "title": "Spirited Away",
+    "canonicalId": 129,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-1429",
+    "title": "Attack on Titan",
+    "canonicalId": 1429,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-95479",
+    "title": "Jujutsu Kaisen",
+    "canonicalId": 95479,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-69424",
+    "title": "Castlevania",
+    "canonicalId": 69424,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-246",
+    "title": "Avatar: The Last Airbender",
+    "canonicalId": 246,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-209867",
+    "title": "Frieren: Beyond Journey’s End",
+    "canonicalId": 209867,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-37854",
+    "title": "One Piece",
+    "canonicalId": 37854,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-114410",
+    "title": "Chainsaw Man",
+    "canonicalId": 114410,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-95557",
+    "title": "Invincible",
+    "canonicalId": 95557,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-372058",
+    "title": "Your Name.",
+    "canonicalId": 372058,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-916224",
+    "title": "Suzume",
+    "canonicalId": 916224,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-31911",
+    "title": "Fullmetal Alchemist: Brotherhood",
+    "canonicalId": 31911,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-13916",
+    "title": "Death Note",
+    "canonicalId": 13916,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-4935",
+    "title": "Howl’s Moving Castle",
+    "canonicalId": 4935,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-83095",
+    "title": "Vinland Saga",
+    "canonicalId": 83095,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-128",
+    "title": "Princess Mononoke",
+    "canonicalId": 128,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-635302",
+    "title": "Demon Slayer: Mugen Train",
+    "canonicalId": 635302,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-810693",
+    "title": "Jujutsu Kaisen 0",
+    "canonicalId": 810693,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-610150",
+    "title": "Dragon Ball Super: Super Hero",
+    "canonicalId": 610150,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-14813",
+    "title": "Teen Titans: Trouble in Tokyo",
+    "canonicalId": 14813,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-149",
+    "title": "Akira",
+    "canonicalId": 149,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-508883",
+    "title": "The Boy and the Heron",
+    "canonicalId": 508883,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-378064",
+    "title": "A Silent Voice",
+    "canonicalId": 378064,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-144358",
+    "title": "Justice League: The Flashpoint Paradox",
+    "canonicalId": 144358,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-568160",
+    "title": "Weathering with You",
+    "canonicalId": 568160,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-149870",
+    "title": "The Wind Rises",
+    "canonicalId": 149870,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-393209",
+    "title": "Dragon Ball Super: Broly",
+    "canonicalId": 393209,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-315162",
+    "title": "Puss in Boots: The Last Wish",
+    "canonicalId": 315162,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-536554",
+    "title": "Guillermo del Toro’s Pinocchio",
+    "canonicalId": 536554,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-9806",
+    "title": "The Incredibles",
+    "canonicalId": 9806,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-260513",
+    "title": "Incredibles 2",
+    "canonicalId": 260513,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-1327821",
+    "title": "Incredibles 3",
+    "canonicalId": 1327821,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-862",
+    "title": "Toy Story",
+    "canonicalId": 862,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "adventure-time-side-quests",
+    "title": "Adventure Time: Side Quests",
+    "canonicalId": 260000,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "adventure-time-fionna-and-cake",
+    "title": "Adventure Time: Fionna and Cake",
+    "canonicalId": 219717,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "helluva-boss",
+    "title": "Helluva Boss",
+    "canonicalId": 96001,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "adventure-time-distant-lands",
+    "title": "Adventure Time: Distant Lands",
+    "canonicalId": 103233,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "steven-universe-future",
+    "title": "Steven Universe Future",
+    "canonicalId": 95594,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "the-amazing-world-of-gumball",
+    "title": "The Amazing World of Gumball",
+    "canonicalId": 38781,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "steven-universe",
+    "title": "Steven Universe",
+    "canonicalId": 49780,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "adventure-time",
+    "title": "Adventure Time",
+    "canonicalId": 15260,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "max-steel",
+    "title": "Max Steel",
+    "canonicalId": 46896,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "regular-show",
+    "title": "Regular Show",
+    "canonicalId": 32306,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "gravity-falls",
+    "title": "Gravity Falls",
+    "canonicalId": 40075,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "ben-10-omniverse",
+    "title": "Ben 10: Omniverse",
+    "canonicalId": 46187,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "ben-10-ultimate-alien",
+    "title": "Ben 10: Ultimate Alien",
+    "canonicalId": 34392,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "generator-rex",
+    "title": "Generator Rex",
+    "canonicalId": 32313,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "sym-bionic-titan",
+    "title": "Sym-Bionic Titan",
+    "canonicalId": 32415,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "naruto",
+    "title": "Naruto",
+    "canonicalId": 46260,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "ben-10-alien-force",
+    "title": "Ben 10: Alien Force",
+    "canonicalId": 12693,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "the-secret-saturdays",
+    "title": "The Secret Saturdays",
+    "canonicalId": 16186,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "ben-10-classic",
+    "title": "Ben 10",
+    "canonicalId": 3867,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "kim-possible",
+    "title": "Kim Possible",
+    "canonicalId": 3824,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "american-dragon-jake-long",
+    "title": "American Dragon: Jake Long",
+    "canonicalId": 2190,
+    "idStatus": "WRONG_ID_FOR_TITLE",
+    "detectedConflicts": [
+      "2190 is South Park, not American Dragon: Jake Long"
+    ],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "danny-phantom",
+    "title": "Danny Phantom",
+    "canonicalId": 2548,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "teen-titans",
+    "title": "Teen Titans",
+    "canonicalId": 2409,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "static-shock",
+    "title": "Static Shock",
+    "canonicalId": 1819,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "batman-the-animated-series",
+    "title": "Batman: The Animated Series",
+    "canonicalId": 2098,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "dragon-ball-z",
+    "title": "Dragon Ball Z",
+    "canonicalId": 12971,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "digimon-adventure",
+    "title": "Digimon Adventure",
+    "canonicalId": 4614,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "naruto-shippuden",
+    "title": "Naruto: Shippuden",
+    "canonicalId": 31910,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "spongebob-squarepants",
+    "title": "SpongeBob SquarePants",
+    "canonicalId": 387,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "samurai-jack",
+    "title": "Samurai Jack",
+    "canonicalId": 2190,
+    "idStatus": "WRONG_ID_FOR_TITLE",
+    "detectedConflicts": [
+      "Shares tmdbId 2190 with American Dragon: Jake Long",
+      "2190 is South Park, not Samurai Jack"
+    ],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-4630",
+    "title": "The Fairly OddParents",
+    "canonicalId": 4630,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-62487",
+    "title": "Harvey Beaks",
+    "canonicalId": 62487,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-68073",
+    "title": "The Loud House",
+    "canonicalId": 68073,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-607",
+    "title": "The Powerpuff Girls",
+    "canonicalId": 607,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-47480",
+    "title": "The Tom and Jerry Show",
+    "canonicalId": 47480,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-63401",
+    "title": "We Bare Bears",
+    "canonicalId": 63401,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-94954",
+    "title": "Hazbin Hotel",
+    "canonicalId": 94954,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-27318",
+    "title": "Breadwinners",
+    "canonicalId": 27318,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-124920",
+    "title": "Rugrats",
+    "canonicalId": 124920,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-537",
+    "title": "Hey Arnold!",
+    "canonicalId": 537,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-126824",
+    "title": "The Patrick Star Show",
+    "canonicalId": 126824,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-50035",
+    "title": "Clarence",
+    "canonicalId": 50035,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-2604",
+    "title": "The Boondocks",
+    "canonicalId": 2604,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-46698",
+    "title": "Randy Cunningham: 9th Grade Ninja",
+    "canonicalId": 46698,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-17572",
+    "title": "Kick Buttowski: Suburban Daredevil",
+    "canonicalId": 17572,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-668",
+    "title": "X-Men: Evolution",
+    "canonicalId": 668,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-513",
+    "title": "Batman Beyond",
+    "canonicalId": 513,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-2022",
+    "title": "The Batman",
+    "canonicalId": 2022,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-33880",
+    "title": "The Legend of Korra",
+    "canonicalId": 33880,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-61923",
+    "title": "Star vs. the Forces of Evil",
+    "canonicalId": 61923,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-615",
+    "title": "Futurama",
+    "canonicalId": 615,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-51817",
+    "title": "Teenage Mutant Ninja Turtles",
+    "canonicalId": 51817,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-99777",
+    "title": "Onyx Equinox",
+    "canonicalId": 99777,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-9907",
+    "title": "Chowder",
+    "canonicalId": 9907,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-897",
+    "title": "The Grim Adventures of Billy and Mandy",
+    "canonicalId": 897,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-10331",
+    "title": "Spawn",
+    "canonicalId": 10331,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-17463",
+    "title": "Kid vs. Kat",
+    "canonicalId": 17463,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-6046",
+    "title": "El Tigre: The Adventures of Manny Rivera",
+    "canonicalId": 6046,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-96715",
+    "title": "Chip 'n' Dale: Park Life",
+    "canonicalId": 96715,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-569094",
+    "title": "Spider-Man: Across the Spider-Verse",
+    "canonicalId": 569094,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-324857",
+    "title": "Spider-Man: Into the Spider-Verse",
+    "canonicalId": 324857,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-14919",
+    "title": "Batman: Mask of the Phantasm",
+    "canonicalId": 14919,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-10386",
+    "title": "The Iron Giant",
+    "canonicalId": 10386,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-movie-40662",
+    "title": "Batman: Under the Red Hood",
+    "canonicalId": 40662,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-4229",
+    "title": "Dexter's Laboratory",
+    "canonicalId": 4229,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-1618",
+    "title": "Justice League",
+    "canonicalId": 1618,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-84200",
+    "title": "Justice League Unlimited",
+    "canonicalId": 84200,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-68837",
+    "title": "Justice League Action",
+    "canonicalId": 68837,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tmdb-tv-45140",
+    "title": "Teen Titans Go!",
+    "canonicalId": 45140,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "m-503314",
+    "title": "Dragon Ball Super: Broly",
+    "canonicalId": 503314,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-7869",
+    "title": "The Penguins of Madagascar",
+    "canonicalId": 7869,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-65763",
+    "title": "New Looney Tunes",
+    "canonicalId": 65763,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-2085",
+    "title": "Courage the Cowardly Dog",
+    "canonicalId": 2085,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-34391",
+    "title": "Marvel's Ultimate Spider-Man",
+    "canonicalId": 34391,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-72705",
+    "title": "Marvel's Spider-Man",
+    "canonicalId": 72705,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-3854",
+    "title": "The Spectacular Spider-Man",
+    "canonicalId": 3854,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-3611",
+    "title": "Cow and Chicken",
+    "canonicalId": 3611,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-204024",
+    "title": "Rock, Paper, Scissors",
+    "canonicalId": 204024,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-45013",
+    "title": "Wander Over Yonder",
+    "canonicalId": 45013,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-1567",
+    "title": "CatDog",
+    "canonicalId": 1567,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-4028",
+    "title": "Legion of Super Heroes",
+    "canonicalId": 4028,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-63181",
+    "title": "Marvel's Guardians of the Galaxy",
+    "canonicalId": 63181,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-3072",
+    "title": "Stripperella",
+    "canonicalId": 3072,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-1977",
+    "title": "Loonatics Unleashed",
+    "canonicalId": 1977,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-2342",
+    "title": "Clone High",
+    "canonicalId": 2342,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-95775",
+    "title": "Nate Is Late",
+    "canonicalId": 95775,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-4508",
+    "title": "The Zeta Project",
+    "canonicalId": 4508,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-60789",
+    "title": "Monsters vs. Aliens",
+    "canonicalId": 60789,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-64931",
+    "title": "Pig Goat Banana Cricket",
+    "canonicalId": 64931,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-3793",
+    "title": "Invader ZIM",
+    "canonicalId": 3793,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-1763",
+    "title": "Braceface",
+    "canonicalId": 1763,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-55924",
+    "title": "Camp Lakebottom",
+    "canonicalId": 55924,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-200753",
+    "title": "Kite Man: Hell Yeah!",
+    "canonicalId": 200753,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-123548",
+    "title": "Castlevania: Nocturne",
+    "canonicalId": 123548,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-61119",
+    "title": "The 7D",
+    "canonicalId": 61119,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-21781",
+    "title": "The Super Hero Squad Show",
+    "canonicalId": 21781,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-9921",
+    "title": "Back at the Barnyard",
+    "canonicalId": 9921,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-557",
+    "title": "Camp Lazlo",
+    "canonicalId": 557,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-18828",
+    "title": "T.U.F.F. Puppy",
+    "canonicalId": 18828,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-127706",
+    "title": "Kiff",
+    "canonicalId": 127706,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-1346",
+    "title": "Wow! Wow! Wubbzy!",
+    "canonicalId": 1346,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-31499",
+    "title": "Fish Hooks",
+    "canonicalId": 31499,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-4336",
+    "title": "Drawn Together",
+    "canonicalId": 4336,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-504",
+    "title": "The Ren & Stimpy Show",
+    "canonicalId": 504,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-32605",
+    "title": "The Looney Tunes Show",
+    "canonicalId": 32605,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-1720",
+    "title": "Foster's Home for Imaginary Friends",
+    "canonicalId": 1720,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-118546",
+    "title": "Clone High",
+    "canonicalId": 118546,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-4585",
+    "title": "Tripping the Rift",
+    "canonicalId": 4585,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-1126",
+    "title": "Happy Tree Friends",
+    "canonicalId": 1126,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-33217",
+    "title": "Young Justice",
+    "canonicalId": 33217,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  },
+  {
+    "showId": "tv-56210",
+    "title": "High School USA!",
+    "canonicalId": 56210,
+    "idStatus": "OK",
+    "detectedConflicts": [],
+    "providerMappings": [
+      {
+        "provider": "server-1",
+        "method": "tmdb-id"
+      }
+    ]
+  }
+]

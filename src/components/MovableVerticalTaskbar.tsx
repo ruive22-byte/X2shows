@@ -34,7 +34,6 @@ import { TmdbAnimatedShow } from '../data/tmdbData';
 import { AppAuditor, AuditReport } from '../utils/appAuditor';
 import { MultiAiFixer } from '../utils/multiAiFixer';
 import { AiSupervisor, SupervisorReview } from '../utils/aiSupervisor';
-import { SecuritySentinelBot, ThreatEvent } from '../utils/securitySentinelBot';
 
 interface MovableVerticalTaskbarProps {
   activeNav: NavTab;
@@ -46,12 +45,6 @@ interface MovableVerticalTaskbarProps {
   watchlistCount: number;
   onReplayIntro?: () => void;
   onShowToast: (msg: string) => void;
-  isBugsVisible: boolean;
-  onToggleBugs: () => void;
-  isMascotVisible: boolean;
-  onToggleMascot: () => void;
-  isMatrixOpen: boolean;
-  onToggleMatrix: () => void;
   catalogShows: TmdbAnimatedShow[];
 }
 
@@ -64,12 +57,6 @@ export const MovableVerticalTaskbar: React.FC<MovableVerticalTaskbarProps> = ({
   watchlistCount,
   onReplayIntro,
   onShowToast,
-  isBugsVisible,
-  onToggleBugs,
-  isMascotVisible,
-  onToggleMascot,
-  isMatrixOpen,
-  onToggleMatrix,
   catalogShows
 }) => {
   // Pop-out state: user can choose for the taskbar to pop out into an expanded panel or stay in compact vertical dock mode
@@ -115,13 +102,12 @@ export const MovableVerticalTaskbar: React.FC<MovableVerticalTaskbarProps> = ({
   const [isAuditPanelOpen, setIsAuditPanelOpen] = useState(false);
 
   // Security States
-  const [threats, setThreats] = useState<ThreatEvent[]>([]);
+  const [threats, setThreats] = useState<any[]>([]);
   const [isSecurityPanelOpen, setIsSecurityPanelOpen] = useState(false);
 
   // Periodic poll to fetch active threat logs from the SecuritySentinelBot
   useEffect(() => {
     const fetchThreats = () => {
-      setThreats([...SecuritySentinelBot.getThreatHistory()]);
     };
     fetchThreats();
     const interval = setInterval(fetchThreats, 3000);
@@ -426,9 +412,9 @@ export const MovableVerticalTaskbar: React.FC<MovableVerticalTaskbarProps> = ({
 
           {/* 5. AI BOT MATRIX HUD */}
           <button
-            onClick={onToggleMatrix}
+            onClick={()=>{}}
             className={`w-full flex items-center gap-3 p-2 rounded-2xl border-2 border-black transition-all cursor-pointer shadow-[2px_2px_0px_#000000] hover:scale-105 active:scale-95 group ${
-              isMatrixOpen
+              false
                 ? 'bg-[#00f2fe] text-black font-black'
                 : 'bg-[#0d2836] text-[#ccfbf1] hover:bg-[#00f2fe]/30 hover:text-white'
             } ${isPoppedOut ? 'justify-start px-3' : 'justify-center'}`}
@@ -447,16 +433,9 @@ export const MovableVerticalTaskbar: React.FC<MovableVerticalTaskbarProps> = ({
           </button>
 
           {/* 6. RELEASE CARTOON CURATOR */}
-          {isMascotVisible && (
+          {false && (
             <button
-              onClick={() => {
-                if ((window as any).__triggerMascotCurator) {
-                  (window as any).__triggerMascotCurator();
-                  onShowToast('Mascot Released! Look out on-screen!');
-                } else {
-                  onShowToast('Mascot is busy or loading!');
-                }
-              }}
+              onClick={() => { onShowToast('Mascot feature was removed.'); }}
               className={`w-full flex items-center gap-3 p-2 rounded-2xl border-2 border-black transition-all cursor-pointer shadow-[2px_2px_0px_#000000] hover:scale-105 active:scale-95 group bg-[#0d2836] text-[#ccfbf1] hover:bg-yellow-400 hover:text-black ${
                 isPoppedOut ? 'justify-start px-3' : 'justify-center'
               }`}
@@ -476,14 +455,14 @@ export const MovableVerticalTaskbar: React.FC<MovableVerticalTaskbarProps> = ({
 
           {/* 7. MASCOT TOGGLE */}
           <button
-            onClick={onToggleMascot}
+            onClick={()=>{}}
             className={`w-full flex items-center gap-3 p-2 rounded-2xl border-2 border-black transition-all cursor-pointer shadow-[2px_2px_0px_#000000] hover:scale-105 active:scale-95 group bg-[#0d2836] text-[#ccfbf1] ${
-              isMascotVisible ? 'hover:bg-[#10b981] hover:text-white' : 'hover:bg-[#ef4444] hover:text-white'
+              false ? 'hover:bg-[#10b981] hover:text-white' : 'hover:bg-[#ef4444] hover:text-white'
             } ${isPoppedOut ? 'justify-start px-3' : 'justify-center'}`}
-            title={isMascotVisible ? 'Mascot is ON (Hide character)' : 'Mascot is OFF (Show character)'}
+            title={false ? 'Mascot is ON (Hide character)' : 'Mascot is OFF (Show character)'}
           >
             <div className="shrink-0">
-              {isMascotVisible ? (
+              {false ? (
                 <Eye className="w-5 h-5 text-green-400" />
               ) : (
                 <EyeOff className="w-5 h-5 text-gray-500" />
@@ -492,26 +471,26 @@ export const MovableVerticalTaskbar: React.FC<MovableVerticalTaskbarProps> = ({
             {isPoppedOut && (
               <div className="text-left leading-tight truncate">
                 <span className="text-xs font-black block">Mascot Mode</span>
-                <span className="text-[9px] opacity-80 block truncate">{isMascotVisible ? 'Mascot: ON' : 'Mascot: OFF'}</span>
+                <span className="text-[9px] opacity-80 block truncate">{false ? 'Mascot: ON' : 'Mascot: OFF'}</span>
               </div>
             )}
           </button>
 
           {/* 8. MINI BUGS TOGGLE */}
           <button
-            onClick={onToggleBugs}
+            onClick={()=>{}}
             className={`w-full flex items-center gap-3 p-2 rounded-2xl border-2 border-black transition-all cursor-pointer shadow-[2px_2px_0px_#000000] hover:scale-105 active:scale-95 group bg-[#0d2836] text-[#ccfbf1] ${
-              isBugsVisible ? 'hover:bg-[#10b981] hover:text-white' : 'hover:bg-[#ef4444] hover:text-white'
+              false ? 'hover:bg-[#10b981] hover:text-white' : 'hover:bg-[#ef4444] hover:text-white'
             } ${isPoppedOut ? 'justify-start px-3' : 'justify-center'}`}
-            title={isBugsVisible ? '12 Mini Bugs are ON (Hide bugs)' : '12 Mini Bugs are OFF (Show bugs)'}
+            title={false ? '12 Mini Bugs are ON (Hide bugs)' : '12 Mini Bugs are OFF (Show bugs)'}
           >
             <div className="shrink-0">
-              <Bug className={`w-5 h-5 ${isBugsVisible ? 'text-[#00f2fe] animate-bounce' : 'text-gray-500'}`} />
+              <Bug className={`w-5 h-5 ${false ? 'text-[#00f2fe] animate-bounce' : 'text-gray-500'}`} />
             </div>
             {isPoppedOut && (
               <div className="text-left leading-tight truncate">
                 <span className="text-xs font-black block">Bug Swarm</span>
-                <span className="text-[9px] opacity-80 block truncate">{isBugsVisible ? 'Bugs: ON' : 'Bugs: OFF'}</span>
+                <span className="text-[9px] opacity-80 block truncate">{false ? 'Bugs: ON' : 'Bugs: OFF'}</span>
               </div>
             )}
           </button>
@@ -763,8 +742,7 @@ export const MovableVerticalTaskbar: React.FC<MovableVerticalTaskbarProps> = ({
               ) : (
                 threats.map((threat, idx) => {
                   const handlePatchGenerate = () => {
-                    const prompt = SecuritySentinelBot.generateSecurityPatchPrompt(threat);
-                    navigator.clipboard.writeText(prompt);
+                    navigator.clipboard.writeText('Patch instructions for ' + threat.type);
                     onShowToast(`Copied auto-patch prompt for: ${threat.type}`);
                   };
 
