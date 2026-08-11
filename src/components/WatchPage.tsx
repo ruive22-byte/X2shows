@@ -298,6 +298,23 @@ export const WatchPage: React.FC<WatchPageProps> = ({
     };
   }, [upscaleConfig, shaderMode, sharpenStrength]);
 
+  // Always synchronize stream URL immediately whenever season, episode, or server changes
+  useEffect(() => {
+    let url = '';
+    if (orchestratedMedia && orchestratedMedia.streamCandidates.length > 0) {
+      const match = orchestratedMedia.streamCandidates.find(c => c.sourceProvider === selectedServerId);
+      if (match) {
+        url = match.url;
+        setStreamCandidate(match);
+      }
+    }
+    if (!url) {
+      url = ServerManager.buildStreamUrl(show, selectedServerId, selectedSeason, currentEpisode);
+    }
+    setActiveStreamUrl(url);
+    setCandidateIndex(0);
+  }, [show, selectedSeason, currentEpisode, selectedServerId, orchestratedMedia]);
+
   // Keyboard Shortcuts Handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -348,16 +365,19 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [duration, isTheaterMode]);
+  }, [duration, isTheaterMode, selectedSeason, currentEpisode]);
 
   const handleNextEpisode = () => {
     const currentList = seasonEpisodesMap[selectedSeason] || [];
-    if (currentEpisode < currentList.length) {
+    const maxEpisodes = currentList.length > 0 ? currentList.length : 24;
+    if (currentEpisode < maxEpisodes) {
       changeEpisode(selectedSeason, currentEpisode + 1);
       onShowToast(`Switched to Episode ${currentEpisode + 1}`);
     } else if (selectedSeason < totalSeasons) {
       changeEpisode(selectedSeason + 1, 1);
       onShowToast(`Switched to Season ${selectedSeason + 1} • Episode 1`);
+    } else {
+      onShowToast(`Reached final episode of ${displayTitle}`);
     }
   };
 
@@ -365,6 +385,13 @@ export const WatchPage: React.FC<WatchPageProps> = ({
     if (currentEpisode > 1) {
       changeEpisode(selectedSeason, currentEpisode - 1);
       onShowToast(`Switched to Episode ${currentEpisode - 1}`);
+    } else if (selectedSeason > 1) {
+      const prevSeasonEpisodes = seasonEpisodesMap[selectedSeason - 1] || [];
+      const prevEpNum = prevSeasonEpisodes.length > 0 ? prevSeasonEpisodes.length : 24;
+      changeEpisode(selectedSeason - 1, prevEpNum);
+      onShowToast(`Switched to Season ${selectedSeason - 1} • Ep ${prevEpNum}`);
+    } else {
+      onShowToast(`Already at Season 1 • Episode 1`);
     }
   };
 
@@ -542,36 +569,10 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                       </div>
                     </div>
                   </div>
-                ) : useIframeEmbed ? (
-                  <div className="w-full h-full bg-black relative">
-                    {/* Embed iFrame Stream */}
-                    {activeStreamUrl && playbackHealth !== 'blocked' && (
-                      <iframe
-                        ref={iframeRef}
-                        src={streamUrlWithResume}
-                        className="w-full h-full border-none"
-                        referrerPolicy="no-referrer"
-                        allowFullScreen
-                        allow="autoplay; fullscreen; encrypted-media; picture-in-picture; accelerometer; gyroscope"
-                        title={`Streaming ${displayTitle}`}
-                      />
-                    )}
-                    {/* Top Popout Overlay Bar */}
-                    <div className="absolute top-2 right-2 z-30">
-                      <button
-                        onClick={() => window.open(activeStreamUrl || streamUrlWithResume, '_blank')}
-                        className="px-2.5 py-1 rounded-lg bg-[#00f2fe] text-black font-black text-[10px] hover:bg-[#14b8a6] transition-all cursor-pointer shadow-[2px_2px_0px_#000000] flex items-center gap-1"
-                        title="Open stream in clean tab to bypass preview iframe sandbox restrictions"
-                      >
-                        <span>Popout Player</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
                 ) : (
-                  /* Interactive HTML5 Player Screen */
+                  /* Interactive Video Player Screen (Full Controls & Overlay Feature Parity) */
                   <div className="relative w-full h-full bg-[#03090d] flex items-center justify-center overflow-hidden">
-                    {/* Embedded Iframe as HTML5 Player Fallback */}
+                    {/* Embedded Iframe Stream */}
                     {activeStreamUrl && playbackHealth !== 'blocked' && (
                       <iframe
                         ref={iframeRef}
