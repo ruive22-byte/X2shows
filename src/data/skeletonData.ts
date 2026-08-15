@@ -19,7 +19,7 @@ export const INITIAL_SECTIONS: SkeletonSection[] = [
     badge: 'NEWLY ADDED',
     isTopTen: false,
     cards: [
-      ...TMDB_ANIMATED_CATALOG.filter(item => item.isNewlyAdded || item.category === 'Newly Added'),
+      ...TMDB_ANIMATED_CATALOG.filter(item => item.isNewlyAdded || item.category === 'Newly Added').slice().reverse(),
       ...TMDB_ANIMATED_CATALOG.filter(item => !item.isNewlyAdded && item.category !== 'Newly Added')
     ].slice(0, 30).map(item => ({
       id: item.id,

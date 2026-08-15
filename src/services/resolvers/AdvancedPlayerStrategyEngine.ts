@@ -5,6 +5,8 @@
  * Supports both [Isolated Iframe] and [Native Canvas] delivery strategies.
  */
 
+import { StreamDeliveryService } from '../streaming/StreamDeliveryService';
+
 export interface PlayerStrategyContext {
   providerId: string;
   mediaId: string;
@@ -48,15 +50,26 @@ export class AdvancedPlayerStrategyEngine {
     console.log(`\n[PHASE 2] CORE MEDIA PLAYER ENGINE ASSEMBLY:`);
     console.log(`👉 Mounting software libraries: [${engineComponents.join(' + ')}]`);
 
-    // [PHASE 3] THE HIDING MECHANISM (THE SECURE TOKEN EXCHANGE)
-    const security = await this.executeTokenHandshake(context, strategy);
+    // [PHASE 3] THE HIDING MECHANISM (THE SECURE TOKEN EXCHANGE VIA POST /api/get-stream)
+    const streamManifest = await StreamDeliveryService.requestStream(context.mediaId, 1, 1, 'tv', context.providerId);
+
+    const security: SecurityHandshake = {
+      authEndpoint: '/api/get-stream',
+      accessToken: 'SECURE_MANIFEST_HANDSHAKE',
+      expiresAt: streamManifest.expiresAt * 1000
+    };
+
     console.log(`\n[PHASE 3] THE HIDING MECHANISM (THE SECURE TOKEN EXCHANGE):`);
-    console.log(`👉 Executing background handshake API token request.`);
-    console.log(`👉 Endpoint Target: ${security.authEndpoint}`);
-    console.log(`👉 Acquired short-lived validation parameters attached to playback path.`);
+    console.log(`👉 Executing background POST /api/get-stream HMAC handshake manifest request.`);
 
     // [PHASE 4] THE STREAM EXTRACTED
-    const pipeline = await this.extractStream(context, security, strategy, engineComponents);
+    const pipeline: ExtractedStreamPipeline = {
+      strategy,
+      engineComponents,
+      masterPlaylistUrl: streamManifest.masterUrl,
+      cdnClusters: streamManifest.cdnClusters || context.serverClusters
+    };
+
     console.log(`\n[PHASE 4] THE STREAM EXTRACTED (THAT IS HOW IT GETS IT):`);
     console.log(`👉 The assembled media player processes incoming variables and points streaming pipeline straight to external content delivery host cluster.`);
     console.log(`👉 Target Manifest: ${pipeline.masterPlaylistUrl}`);

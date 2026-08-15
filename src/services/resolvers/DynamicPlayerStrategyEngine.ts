@@ -8,6 +8,8 @@
  * [PHASE 4] THE STREAM EXTRACTED - Pointing the streaming pipeline to the delivery host
  */
 
+import { StreamDeliveryService } from '../streaming/StreamDeliveryService';
+
 export interface MediaTarget {
   providerId: string;
   mediaId: string;
@@ -45,14 +47,24 @@ export class DynamicPlayerStrategyEngine {
     console.log(`\n[PHASE 2] CORE MEDIA PLAYER ENGINE ASSEMBLY:`);
     console.log(`👉 Then, it mounts these exact software libraries: [${engineComponents.join(' + ')}].`);
 
-    // [PHASE 3] THE HIDING MECHANISM (THE SECURE TOKEN EXCHANGE)
-    const securityContext = await this.executeTokenHandshake(target);
+    // [PHASE 3] THE HIDING MECHANISM (THE SECURE TOKEN EXCHANGE VIA POST /api/get-stream)
+    const streamManifest = await StreamDeliveryService.requestStream(target.mediaId, 1, 1, 'tv', target.providerId);
+
+    const securityContext: SecurityContext = {
+      handshakeEndpoint: '/api/get-stream',
+      expiresAt: streamManifest.expiresAt * 1000
+    };
+
     console.log(`\n[PHASE 3] THE HIDING MECHANISM (THE SECURE TOKEN EXCHANGE):`);
-    console.log(`👉 After that, it executes a background handshake API token request.`);
-    console.log(`👉 Endpoint Target: ${securityContext.handshakeEndpoint}`);
+    console.log(`👉 Executed background POST /api/get-stream HMAC handshake manifest request.`);
 
     // [PHASE 4] THE STREAM EXTRACTED
-    const pipeline = await this.extractStreamPipeline(target, securityContext);
+    const pipeline: StreamingPipeline = {
+      masterPlaylistUrl: streamManifest.masterUrl,
+      clusterHosts: streamManifest.cdnClusters || ['moon.ironwallnet.net'],
+      encryptionType: 'AES-128'
+    };
+
     console.log(`\n[PHASE 4] THE STREAM EXTRACTED (THAT IS HOW IT GETS IT):`);
     console.log(`👉 Finally, the assembled media player processes the incoming variables.`);
     console.log(`👉 Stream Extracted: ${pipeline.masterPlaylistUrl}`);

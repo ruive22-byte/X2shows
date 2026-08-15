@@ -7,7 +7,7 @@ import {
   Sparkles, X, ChevronRight, ChevronDown, Check, Eye, Sliders, 
   Server, Tv, Film, Star, Heart, Plus, Share2, 
   ArrowLeft, ShieldCheck, Zap, Layers, RefreshCw, Radio,
-  Tv2, Keyboard, Users, Folder, FolderOpen, PlayCircle, Cpu, ExternalLink
+  Tv2, Keyboard, Users, Folder, FolderOpen, PlayCircle, Cpu, ExternalLink, Activity
 } from 'lucide-react';
 import {  motion, AnimatePresence } from 'motion/react';
 import {  TmdbAnimatedShow, TMDB_ANIMATED_CATALOG } from '../data/tmdbData';
@@ -31,6 +31,7 @@ import { PlaybackProbe, PlaybackHealth } from '../services/resolvers/PlaybackPro
 import { Loader2 } from 'lucide-react';
 import { AlertTriangle,  Upload } from 'lucide-react';
 import {  usePlaybackQuery } from '../hooks/usePlaybackQuery';
+import { PlayerOrchestrator, PlayerOrchestratorState } from '../services/streaming/PlayerOrchestrator';
 
 interface WatchPageProps {
 
@@ -105,6 +106,31 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   const [showSubSettingsOverlay, setShowSubSettingsOverlay] = useState<boolean>(false);
   const [showAiGpuOverlay, setShowAiGpuOverlay] = useState<boolean>(false);
   const [showGpuShaderDashboard, setShowGpuShaderDashboard] = useState<boolean>(false);
+  const [showDebugDiagnosticsModal, setShowDebugDiagnosticsModal] = useState<boolean>(false);
+  const [showNextEpisodePrompt, setShowNextEpisodePrompt] = useState<boolean>(false);
+
+  // PlayerOrchestrator Instance & State Synchronization
+  const orchestratorRef = useRef<PlayerOrchestrator | null>(null);
+  if (!orchestratorRef.current) {
+    orchestratorRef.current = new PlayerOrchestrator(show);
+  }
+  const [orchState, setOrchState] = useState<PlayerOrchestratorState>(orchestratorRef.current.getState());
+
+  useEffect(() => {
+    if (!orchestratorRef.current) return;
+    return orchestratorRef.current.subscribe(setOrchState);
+  }, []);
+
+  useEffect(() => {
+    if (orchestratorRef.current && show) {
+      orchestratorRef.current.play({
+        show,
+        season: selectedSeason,
+        episode: currentEpisode,
+        serverId: selectedServerId
+      });
+    }
+  }, [show, selectedSeason, currentEpisode]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const playerContainerRef = useRef<HTMLDivElement | null>(null);
@@ -397,25 +423,9 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
   const handleServerChange = (serverId: string) => {
     setSelectedServerId(serverId);
-    let newUrl = '';
-    if (orchestratedMedia) {
-      const candidate = orchestratedMedia.streamCandidates.find(c => c.sourceProvider === serverId);
-      if (candidate) {
-        newUrl = candidate.url;
-        setStreamCandidate(candidate);
-      }
-    }
-    if (!newUrl) {
-      newUrl = ServerManager.buildStreamUrl(show, serverId, selectedSeason, currentEpisode);
-    }
-    setActiveStreamUrl(newUrl);
-    setIsServerLoading(true);
+    orchestratorRef.current?.switchServer(serverId);
     const srv = ServerManager.getServers().find(s => s.id === serverId);
     onShowToast(`Switching stream to ${srv?.name || 'Server'}...`);
-    setTimeout(() => {
-      setIsServerLoading(false);
-      onShowToast(`Connected to ${srv?.name}!`);
-    }, 400);
   };
 
   const toggleFullscreen = () => {
@@ -573,10 +583,10 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   /* Interactive Video Player Screen (Full Controls & Overlay Feature Parity) */
                   <div className="relative w-full h-full bg-[#03090d] flex items-center justify-center overflow-hidden">
                     {/* Embedded Iframe Stream */}
-                    {activeStreamUrl && playbackHealth !== 'blocked' && (
+                    {orchState.activeUrl && !orchState.hasError && (
                       <iframe
                         ref={iframeRef}
-                        src={streamUrlWithResume}
+                        src={orchState.activeUrl}
                         className="absolute inset-0 w-full h-full border-none z-10"
                         referrerPolicy="no-referrer"
                         allowFullScreen
@@ -584,57 +594,150 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                         title={`Streaming ${displayTitle}`}
                       />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none z-20" />
-
 
                     {/* Dark Vignette */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 pointer-events-none z-15" />
 
-                    {/* Server Switch Loading Overlay */}
+                    {/* 1. MULTI-STAGE LOADING SCREEN */}
                     <AnimatePresence>
-                      {isServerLoading && (
+                      {orchState.isLoading && (
                         <motion.div 
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="absolute inset-0 bg-black/90 backdrop-blur-md z-30 flex flex-col items-center justify-center gap-3"
+                          className="absolute inset-0 bg-[#051119] z-30 flex flex-col items-center justify-center p-6 text-center space-y-4"
                         >
-                          <RefreshCw className="w-10 h-10 text-[#00f2fe] animate-spin" />
-                          <p className="text-sm font-black text-white">
-                            Resolving Stream Route on <span className="text-[#14b8a6]">{ServerManager.getServers().find(s => s.id === selectedServerId)?.name}</span>...
-                          </p>
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#14b8a6] to-[#00f2fe] border-2 border-black shadow-[4px_4px_0px_#000] flex items-center justify-center text-black">
+                            <RefreshCw className="w-6 h-6 animate-spin stroke-[3]" />
+                          </div>
+                          <div className="space-y-1 max-w-sm">
+                            <p className="text-sm font-black text-white">{orchState.loadingStep}</p>
+                            <p className="text-xs text-[#99f6e4] font-bold">
+                              {orchState.activeServer.name} • {orchState.season > 0 ? `Season ${orchState.season} Episode ${orchState.episode}` : 'Movie'}
+                            </p>
+                          </div>
+                          
+                          {/* Animated Progress Bar */}
+                          <div className="w-64 max-w-full bg-black/80 border-2 border-black h-3.5 rounded-full overflow-hidden p-0.5 shadow-[2px_2px_0px_#000]">
+                            <div 
+                              className="bg-gradient-to-r from-[#14b8a6] to-[#00f2fe] h-full rounded-full transition-all duration-300"
+                              style={{ width: `${orchState.loadingProgress}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-[#00f2fe]">{orchState.loadingProgress}%</span>
                         </motion.div>
                       )}
                     </AnimatePresence>
 
-                    {/* Center Play Button Overlay */}
-                    {!isPlaying && !isServerLoading && (
-                      <button
-                        onClick={() => setIsPlaying(true)}
-                        className="absolute z-20 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#14b8a6] to-[#00f2fe] text-black border-4 border-black shadow-[4px_4px_0px_#000000] flex items-center justify-center transform hover:scale-110 transition-all cursor-pointer"
-                      >
-                        <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-black translate-x-0.5" />
-                      </button>
-                    )}
+                    {/* 2. USEFUL ERROR RECOVERY SCREEN */}
+                    <AnimatePresence>
+                      {orchState.hasError && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.98 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 bg-[#07151e] z-30 flex flex-col items-center justify-center p-6 text-center space-y-4 border-2 border-amber-500/40"
+                        >
+                          <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border-2 border-black text-amber-400 shadow-[4px_4px_0px_#000] flex items-center justify-center">
+                            <AlertTriangle className="w-8 h-8 stroke-[2.5]" />
+                          </div>
+                          <div className="space-y-1.5 max-w-md">
+                            <h3 className="text-base sm:text-lg font-black text-white">Playback Failed — Try Another Server</h3>
+                            <p className="text-xs text-gray-300 leading-relaxed">
+                              {orchState.errorMessage || 'Unable to establish a direct video connection with the selected provider.'}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
+                            <button
+                              onClick={() => orchestratorRef.current?.retryNextCandidate()}
+                              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#00f2fe] to-[#14b8a6] text-black font-black text-xs hover:brightness-110 transition-all cursor-pointer border-2 border-black shadow-[3px_3px_0px_#000] flex items-center gap-1.5"
+                            >
+                              <Zap className="w-4 h-4 fill-black" />
+                              <span>Try Next Server Candidate</span>
+                            </button>
+                            <button
+                              onClick={() => window.open(orchState.activeUrl, '_blank')}
+                              className="px-4 py-2.5 rounded-xl bg-[#0d2836] text-white hover:bg-[#14b8a6]/20 font-black text-xs transition-all cursor-pointer border-2 border-black shadow-[2px_2px_0px_#000] flex items-center gap-1.5"
+                            >
+                              <span>Open Stream in New Tab</span>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* 3. NEXT EPISODE FINISHED PROMPT OVERLAY */}
+                    <AnimatePresence>
+                      {showNextEpisodePrompt && !orchState.isLoading && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 20 }}
+                          className="absolute inset-0 bg-black/90 backdrop-blur-md z-30 flex flex-col items-center justify-center p-6 text-center space-y-4"
+                        >
+                          <div className="w-12 h-12 rounded-2xl bg-[#14b8a6] text-black border-2 border-black shadow-[4px_4px_0px_#000] flex items-center justify-center">
+                            <Check className="w-7 h-7 stroke-[3]" />
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-black uppercase text-[#00f2fe] tracking-widest">Episode Completed</span>
+                            <h3 className="text-base font-black text-white mt-1">
+                              Up Next: Season {selectedSeason} • Ep {currentEpisode + 1}
+                            </h3>
+                          </div>
+                          <div className="flex items-center gap-2 pt-2">
+                            <button
+                              onClick={() => {
+                                setShowNextEpisodePrompt(false);
+                                handleNextEpisode();
+                              }}
+                              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#00f2fe] to-[#14b8a6] text-black font-black text-xs hover:brightness-110 transition-all cursor-pointer border-2 border-black shadow-[3px_3px_0px_#000] flex items-center gap-2"
+                            >
+                              <Play className="w-4 h-4 fill-black" />
+                              <span>Play Next Episode</span>
+                            </button>
+                            <button
+                              onClick={() => setShowNextEpisodePrompt(false)}
+                              className="px-3.5 py-2.5 rounded-xl bg-[#0d2836] text-white font-bold text-xs hover:bg-white/10 transition-all cursor-pointer border-2 border-black"
+                            >
+                              Dismiss
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     {/* Top Bar inside player */}
-                    <div className="absolute top-3 inset-x-3 z-20 flex items-center justify-between text-xs font-black text-white bg-black/70 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/10">
+                    <div className="absolute top-3 inset-x-3 z-20 flex items-center justify-between text-xs font-black text-white bg-black/80 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/10 shadow-[2px_2px_0px_#000]">
                       <div className="flex items-center gap-2 truncate">
                         <span className="px-2 py-0.5 rounded bg-[#14b8a6] text-black text-[10px] uppercase font-black">
-                          {ServerManager.getServers().find(s => s.id === selectedServerId)?.badge || '4K'}
+                          {orchState.activeServer.badge || '1080p'}
                         </span>
                         <span className="truncate">
                           {displayTitle} {isMovie ? '' : `• Season ${selectedSeason} Ep ${currentEpisode}`}
                         </span>
                       </div>
-                      <button
-                        onClick={() => window.open(activeStreamUrl || streamUrlWithResume, '_blank')}
-                        className="px-2.5 py-1 rounded-lg bg-[#00f2fe] text-black text-[10px] font-black hover:bg-[#14b8a6] transition-all cursor-pointer shadow-[1px_1px_0px_#000000] flex items-center gap-1"
-                        title="Open stream in clean tab to bypass preview iframe sandbox restrictions"
-                      >
-                        <span>Popout Player</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setShowDebugDiagnosticsModal(!showDebugDiagnosticsModal)}
+                          className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer flex items-center gap-1 border border-black ${
+                            showDebugDiagnosticsModal ? 'bg-[#00f2fe] text-black' : 'bg-[#0d2836] text-[#00f2fe] hover:bg-[#14b8a6] hover:text-black'
+                          }`}
+                          title="View Internal Stream Diagnostics"
+                        >
+                          <Activity className="w-3 h-3" />
+                          <span>Diagnostics</span>
+                        </button>
+                        <button
+                          onClick={() => window.open(orchState.activeUrl, '_blank')}
+                          className="px-2.5 py-1 rounded-lg bg-[#00f2fe] text-black text-[10px] font-black hover:bg-[#14b8a6] transition-all cursor-pointer shadow-[1px_1px_0px_#000000] flex items-center gap-1"
+                          title="Open stream in clean tab to bypass preview iframe sandbox restrictions"
+                        >
+                          <span>Popout</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Floating Settings Menu Overlay Popup inside the Player Screen */}
@@ -1388,6 +1491,87 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
               <div className="p-3 rounded-xl bg-[#030d14] border border-[#14b8a6]/40 text-[11px] text-[#7dd3fc] leading-normal">
                 Shortcuts pause after clicking inside the player — click anywhere on the page to get them back.
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* DEBUG STREAM DIAGNOSTICS MODAL */}
+      <AnimatePresence>
+        {showDebugDiagnosticsModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+            onClick={() => setShowDebugDiagnosticsModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="max-w-xl w-full bg-[#07151e] border-2 border-black rounded-3xl p-6 shadow-[8px_8px_0px_#000] space-y-4 max-h-[85vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-gray-800">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-[#00f2fe]" />
+                  <h3 className="text-base font-black text-white uppercase tracking-wider">
+                    Internal Stream Diagnostics
+                  </h3>
+                </div>
+                <button 
+                  onClick={() => setShowDebugDiagnosticsModal(false)}
+                  className="p-1 rounded-xl bg-[#0d2836] hover:bg-red-500 hover:text-black text-gray-300 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="p-3 rounded-xl bg-[#030d14] border border-white/10 space-y-1.5 font-mono">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Media ID:</span>
+                    <span className="text-white font-bold">{show.id}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Active Server:</span>
+                    <span className="text-[#00f2fe] font-bold">{orchState.activeServer.name} ({orchState.activeServer.id})</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Pipeline State:</span>
+                    <span className={`font-bold ${orchState.hasError ? 'text-red-400' : orchState.isLoading ? 'text-amber-300' : 'text-emerald-400'}`}>
+                      {orchState.hasError ? 'FAILED' : orchState.isLoading ? 'RESOLVING' : 'READY'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Candidate Chains:</span>
+                    <span className="text-white font-bold">{orchState.attemptIndex + 1} / {orchState.candidateServers.length}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Resolved Iframe Route</span>
+                  <div className="p-2.5 rounded-xl bg-[#030d14] border border-white/10 font-mono text-[10px] text-[#99f6e4] break-all select-all">
+                    {orchState.activeUrl || 'No route resolved'}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Candidate Server Chain</span>
+                  <div className="space-y-1">
+                    {orchState.candidateServers.map((srv, idx) => {
+                      const isCurrent = idx === orchState.attemptIndex;
+                      return (
+                        <div key={srv.id} className={`p-2 rounded-lg flex items-center justify-between border ${isCurrent ? 'bg-[#14b8a6]/20 border-[#14b8a6] text-[#00f2fe]' : 'bg-[#0d2836] border-black text-gray-300'}`}>
+                          <span className="font-bold">{srv.name}</span>
+                          <span className="text-[10px] font-mono">{isCurrent ? 'ACTIVE' : 'STANDBY'}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </motion.div>
           </motion.div>

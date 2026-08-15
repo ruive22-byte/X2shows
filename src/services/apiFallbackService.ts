@@ -142,7 +142,44 @@ const memoryOmdbCache = new Map<string, OmdbShowResponse>();
  * Pre-seeded with verified TMDB paths for 0ms lookup.
  * Every distinct show has a dedicated, verified unique poster & backdrop path.
  */
-export const VERIFIED_ANIMATION_ARTWORK: Record<string, { poster: string; backdrop: string }> = {};
+export const VERIFIED_ANIMATION_ARTWORK: Record<string, { poster: string; backdrop: string }> = {
+  'tmdb-160': {
+    poster: 'https://static.tvmaze.com/uploads/images/original_untouched/20/50244.jpg',
+    backdrop: 'https://static.tvmaze.com/uploads/images/original_untouched/20/50244.jpg',
+  },
+  'tmdb-2284': {
+    poster: 'https://static.tvmaze.com/uploads/images/original_untouched/6/15145.jpg',
+    backdrop: 'https://static.tvmaze.com/uploads/images/original_untouched/6/15145.jpg',
+  },
+  'tmdb-231394': {
+    poster: 'https://static.tvmaze.com/uploads/images/original_untouched/530/1326910.jpg',
+    backdrop: 'https://static.tvmaze.com/uploads/images/original_untouched/530/1326910.jpg',
+  },
+  'tmdb-61175': {
+    poster: 'https://static.tvmaze.com/uploads/images/original_untouched/8/22200.jpg',
+    backdrop: 'https://static.tvmaze.com/uploads/images/original_untouched/8/22200.jpg',
+  },
+  'tmdb-125928': {
+    poster: 'https://static.tvmaze.com/uploads/images/original_untouched/528/1320722.jpg',
+    backdrop: 'https://static.tvmaze.com/uploads/images/original_untouched/528/1320722.jpg',
+  },
+  'tmdb-50035': {
+    poster: 'https://static.tvmaze.com/uploads/images/original_untouched/22/56691.jpg',
+    backdrop: 'https://static.tvmaze.com/uploads/images/original_untouched/22/56691.jpg',
+  },
+  'tmdb-38165': {
+    poster: 'https://static.tvmaze.com/uploads/images/original_untouched/20/51915.jpg',
+    backdrop: 'https://static.tvmaze.com/uploads/images/original_untouched/20/51915.jpg',
+  },
+  'tmdb-21761': {
+    poster: 'https://static.tvmaze.com/uploads/images/original_untouched/62/157382.jpg',
+    backdrop: 'https://static.tvmaze.com/uploads/images/original_untouched/62/157382.jpg',
+  },
+  'tmdb-204137': {
+    poster: 'https://static.tvmaze.com/uploads/images/original_untouched/629/1573772.jpg',
+    backdrop: 'https://static.tvmaze.com/uploads/images/original_untouched/629/1573772.jpg',
+  },
+};
 
 /**
  * Build-Time & Runtime Data Integrity Validator

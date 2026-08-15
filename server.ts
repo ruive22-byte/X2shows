@@ -381,6 +381,93 @@ async function startServer() {
     }
   });
 
+  // Defensive Streaming Engine: Signed HMAC Stream Manifest Generator (HLS/m3u8 CDN)
+  app.post('/api/get-stream', (req: any, res: any) => {
+    const startTime = Date.now();
+    try {
+      const { mediaId, season, episode, type, providerId } = req.body || {};
+      const targetMediaId = String(mediaId || '160');
+      const seasonNum = Number(season || 1);
+      const episodeNum = Number(episode || 1);
+      const mediaType = type || 'tv';
+      
+      // Backend is the source of truth for stream pathing
+      const episodePathPrefix = mediaType === 'movie'
+        ? `/hls/${targetMediaId}/movie/`
+        : `/hls/${targetMediaId}/s${seasonNum}e${episodeNum}/`;
+      
+      const masterPath = `${episodePathPrefix}master.m3u8`;
+      const targetUser = req.session?.username || 'x2user';
+      
+      // Token expiration: 12 hours (43200s)
+      const expiresAt = Math.floor(Date.now() / 1000) + 43200;
+      const secret = getSessionSecret();
+      
+      // HMAC-SHA256 signature for the directory prefix (protects master.m3u8, sub-manifests, and .ts segments)
+      const payloadStr = `${episodePathPrefix}:${targetUser}:${expiresAt}`;
+      const tokenSignature = crypto.createHmac('sha256', secret).update(payloadStr).digest('hex');
+      
+      // Multi-CDN Domain Rotation Engine
+      const CDN_DOMAINS = [
+        'cdn1.x2shows.net',
+        'cdn2.x2shows.net',
+        'moon.ironwallnet.net',
+        'edge.x2shows.io'
+      ];
+      const domainIndex = (Math.abs(targetMediaId.split('').reduce((a, b) => a + b.charCodeAt(0), 0)) + new Date().getDay()) % CDN_DOMAINS.length;
+      const activeCdn = CDN_DOMAINS[domainIndex];
+      
+      const masterUrl = `https://${activeCdn}${masterPath}?token=${tokenSignature}&expires=${expiresAt}&user=${encodeURIComponent(targetUser)}`;
+      
+      // Sanitized execution log (NO tokens, NO secret hashes, NO authorization secrets)
+      const processingTimeMs = Date.now() - startTime;
+      console.log(`[StreamManifestEngine] Stream requested -> mediaId: ${targetMediaId}, season: ${seasonNum}, episode: ${episodeNum}, provider: ${providerId || 'ironwall-hls'}, status: 200, latency: ${processingTimeMs}ms`);
+
+      return res.json({
+        protocol: 'hls',
+        masterUrl,
+        expiresAt,
+        provider: providerId || 'ironwall-hls',
+        cdnClusters: CDN_DOMAINS,
+        activeCdn
+      });
+    } catch (err: any) {
+      console.error(`[StreamManifestEngine] Error handling stream request -> mediaId: ${req.body?.mediaId}, status: 500, time: ${Date.now() - startTime}ms`);
+      return res.status(500).json({ success: false, error: 'STREAM_MANIFEST_GENERATION_FAILED' });
+    }
+  });
+
+  // Token Verification Engine for CDN & Proxy Nodes
+  app.post('/api/stream/verify', (req: any, res: any) => {
+    try {
+      const { resourcePath, token, expires, user } = req.body || {};
+      if (!token || !expires || !resourcePath) {
+        return res.status(400).json({ valid: false, reason: 'MISSING_PARAMETERS' });
+      }
+      
+      const expiresNum = Number(expires);
+      if (Math.floor(Date.now() / 1000) > expiresNum) {
+        return res.status(403).json({ valid: false, reason: 'TOKEN_EXPIRED' });
+      }
+      
+      // Extract prefix (e.g. /hls/160/s1e1/) to validate parent folder authorization
+      const pathParts = resourcePath.split('/');
+      const directoryPrefix = pathParts.slice(0, 4).join('/') + '/';
+      
+      const secret = getSessionSecret();
+      const payloadStr = `${directoryPrefix}:${user || 'x2user'}:${expiresNum}`;
+      const expectedSignature = crypto.createHmac('sha256', secret).update(payloadStr).digest('hex');
+      
+      if (crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expectedSignature))) {
+        return res.json({ valid: true, expiresAt: expiresNum });
+      } else {
+        return res.status(403).json({ valid: false, reason: 'INVALID_SIGNATURE' });
+      }
+    } catch (err: any) {
+      return res.status(400).json({ valid: false, reason: 'VERIFICATION_FAILED' });
+    }
+  });
+
   // TMDB Status & Config Endpoint
   app.get('/api/tmdb/config', (req, res) => {
     const hasTmdbKey = !!(process.env.TMDB_API_KEY || process.env.TMDB_ACCESS_TOKEN || process.env.TMDB_TOKEN);
@@ -395,6 +482,95 @@ async function startServer() {
         ? 'Live TMDB API connected with strict key validation.' 
         : 'Running on authentic curated TMDB animation cache. To connect live TMDB, set TMDB_API_KEY in AI Studio Settings.'
     });
+  });
+
+  // Fast Server-Side Episode Catalog Cache Architecture
+  interface CatalogEpisode {
+    showId: string;
+    season: number;
+    episode: number;
+    title: string;
+    streamId: string;
+  }
+
+  interface CatalogSeason {
+    number: number;
+    episodes: CatalogEpisode[];
+  }
+
+  interface ShowCatalogResponse {
+    showId: string;
+    title?: string;
+    seasons: CatalogSeason[];
+    cachedAt: string;
+  }
+
+  const serverCatalogCache = new Map<string, ShowCatalogResponse>();
+
+  function getOrBuildServerCatalog(showId: string, seasonsCount = 2, epsPerSeason = 12): ShowCatalogResponse {
+    const cleanId = String(showId);
+    if (serverCatalogCache.has(cleanId)) {
+      return serverCatalogCache.get(cleanId)!;
+    }
+
+    const seasons: CatalogSeason[] = [];
+    for (let s = 1; s <= seasonsCount; s++) {
+      const episodes: CatalogEpisode[] = [];
+      for (let e = 1; e <= epsPerSeason; e++) {
+        episodes.push({
+          showId: cleanId,
+          season: s,
+          episode: e,
+          title: `Episode ${e}`,
+          streamId: `${cleanId}_s${s}e${e}`
+        });
+      }
+      seasons.push({ number: s, episodes });
+    }
+
+    const entry: ShowCatalogResponse = {
+      showId: cleanId,
+      seasons,
+      cachedAt: new Date().toISOString()
+    };
+
+    serverCatalogCache.set(cleanId, entry);
+    return entry;
+  }
+
+  // Pre-populate popular show metadata in background
+  const SYNC_CATALOG_IDS = ['160', '2190', '61836', '31911', '1429', '46260', '65334', '86831'];
+  SYNC_CATALOG_IDS.forEach(id => getOrBuildServerCatalog(id, 3, 12));
+
+  // GET /api/catalog/show/:id (Fast separated metadata endpoint)
+  app.get('/api/catalog/show/:id', (req: any, res: any) => {
+    try {
+      const showId = String(req.params.id);
+      const seasonsCount = Number(req.query.seasons) || 2;
+      const epsPerSeason = Number(req.query.episodes) || 12;
+
+      const catalog = getOrBuildServerCatalog(showId, seasonsCount, epsPerSeason);
+      return res.json({
+        success: true,
+        ...catalog
+      });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: 'CATALOG_FETCH_FAILED' });
+    }
+  });
+
+  // GET /api/catalog/shows (All cached catalog shows summary)
+  app.get('/api/catalog/shows', (req: any, res: any) => {
+    try {
+      const cachedShows = Array.from(serverCatalogCache.values());
+      return res.json({
+        success: true,
+        totalCached: cachedShows.length,
+        shows: cachedShows
+      });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: 'CATALOG_INDEX_FAILED' });
+    }
   });
 
   // TMDB Proxy Discover Route (Animation Genre 16)
